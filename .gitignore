@@ -1,5 +1,7 @@
+# build files
 build/
-dust
+sandbox/sandbox
+engine/libcarbon.so
 
 # clangd
 .cache/
