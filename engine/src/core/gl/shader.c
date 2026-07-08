@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "shader.h"
 
@@ -22,9 +22,9 @@ static const char *read_shader_file(const char *path) {
 
   fread(buffer, 1, len, file);
   fclose(file);
-  
+
   buffer[len] = '\0';
-  
+
   return buffer;
 }
 
@@ -50,7 +50,7 @@ Shader shader_from_sources(const char *vertex_source, const char *frag_source) {
   glShaderSource(frag_id, 1, &frag_source, NULL);
   glCompileShader(frag_id);
 
-  Shader shader = {.id = glCreateProgram() };
+  Shader shader = {.id = glCreateProgram()};
   glAttachShader(shader.id, vertex_id);
   glAttachShader(shader.id, frag_id);
   glLinkProgram(shader.id);
@@ -68,7 +68,7 @@ void shader_free(Shader *shader) {
 
 void shader_bind(Shader shader) { glUseProgram(shader.id); }
 void shader_unbind(void) { glUseProgram(0); }
-						
+
 void shader_uniform_mat4(Shader shader, const char *uniform, Mat4 mat) {
   GLint loc_uniform = glGetUniformLocation(shader.id, uniform);
   glUniformMatrix4fv(loc_uniform, 1, GL_FALSE, mat4_ptr(&mat));
@@ -77,4 +77,10 @@ void shader_uniform_mat4(Shader shader, const char *uniform, Mat4 mat) {
 void shader_uniform_int(Shader shader, const char *uniform, i32 val) {
   GLint loc_uniform = glGetUniformLocation(shader.id, uniform);
   glUniform1i(loc_uniform, val);
+}
+
+void shader_uniform_int_array(Shader shader, const char *uniform, u32 size,
+                              i32 *val) {
+  GLint loc_uniform = glGetUniformLocation(shader.id, uniform);
+  glUniform1iv(loc_uniform, size, val);
 }

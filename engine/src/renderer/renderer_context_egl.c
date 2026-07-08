@@ -90,11 +90,16 @@ void renderer_context_make_current(RendererContext *ctx) {
   gladLoadGLLoader((GLADloadproc)eglGetProcAddress);
 }
 
-b8 renderer_context_swap_buffers(RendererContext *ctx, Color color) {
+void renderer_context_swap_buffers(RendererContext *ctx) {
   RendererContextEGL *descriptor = ctx->descriptor;
+  eglSwapBuffers(descriptor->display, descriptor->surface);
+}
+
+void renderer_context_clear(Color color) {
   glClearColor(color.red, color.green, color.blue, color.alpha);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  eglSwapBuffers(descriptor->display, descriptor->surface);
+}
 
-  return true;
+void renderer_context_viewport(u32 width, u32 height) {
+  glViewport(0, 0, width, height);
 }

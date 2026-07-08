@@ -5,6 +5,7 @@
 #include "core/gl/texture.h"
 #include "core/gl/vao.h"
 #include "core/gl/vbo.h"
+#include "core/gl/shader.h"
 
 #include "core/math/color.h"
 #include "core/math/vec2.h"
@@ -38,9 +39,10 @@ typedef struct {
 
 typedef struct {
   RendererBatch *batch;
+  Shader shader;
 } Renderer;
 
-CB_API Renderer *renderer_new(void);
+CB_API Renderer *renderer_new(Shader shader);
 CB_API void renderer_destroy(Renderer *renderer);
 
 CB_API void renderer_begin(Renderer *renderer);

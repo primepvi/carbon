@@ -11,7 +11,8 @@ typedef struct {
 CB_API RendererContext *renderer_context_new(void);
 CB_API void renderer_context_destroy(RendererContext *ctx);
 void renderer_context_make_current(RendererContext *ctx);
-b8 renderer_context_swap_buffers(RendererContext *ctx, Color color);
-void renderer_context_viewport(RendererContext *ctx, u32 width, u32 height);
+void renderer_context_swap_buffers(RendererContext *ctx);
+void renderer_context_clear(Color color);
+void renderer_context_viewport(u32 width, u32 height);
 
 #endif

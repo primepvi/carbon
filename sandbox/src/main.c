@@ -11,8 +11,12 @@ Renderer *renderer;
 void update(void) {}
 
 void draw(void) {
+
   renderer_begin(renderer);
-  renderer_draw_quad(renderer, VEC2_ZERO, VEC2(30, 30), COLOR_RED);
+
+  renderer_draw_quad(renderer, VEC2(400.0f, 0.0f), VEC2(100, 100), COLOR_RED);
+  renderer_draw_quad(renderer, VEC2(100.0f, 0.0f), VEC2(100, 100),
+                     COLOR_GREEN);
   renderer_end(renderer);
 }
 
@@ -22,15 +26,10 @@ int main(void) {
 
   engine_init(platform, ctx);
 
-  renderer = renderer_new();
-
   Shader shader =
       shader_from_files("assets/shaders/main.vert", "assets/shaders/main.frag");
-  shader_bind(shader);
-  shader_uniform_mat4(shader, "u_model", mat4_identity());
-  shader_uniform_mat4(shader, "u_view", mat4_identity());
-  shader_uniform_mat4(shader, "u_proj", mat4_ortho(0, 800, 600, 0));
-
+  
+  renderer = renderer_new(shader);
   engine_run(update, draw);
 
   renderer_context_destroy(ctx);

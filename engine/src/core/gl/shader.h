@@ -18,5 +18,6 @@ CB_API void shader_unbind(void);
 
 CB_API void shader_uniform_mat4(Shader shader, const char *uniform, Mat4 mat);
 void shader_uniform_int(Shader shader, const char *uniform, i32 val);
+void shader_uniform_int_array(Shader shader, const char *uniform, u32 count, i32 *val);
 
 #endif

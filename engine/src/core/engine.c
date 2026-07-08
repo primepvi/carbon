@@ -15,6 +15,7 @@ b8 engine_init(Platform *platform, RendererContext *ctx) {
   platform_window_create(platform);
   platform_window_attach_egl(platform, ctx);
   renderer_context_make_current(ctx);
+  renderer_context_viewport(platform->width, platform->height);
 
   return true;
 }
@@ -27,13 +28,13 @@ void engine_run(EngineUpdateCallback update, EngineDrawCallback draw) {
       engine_quit();
       break;
     }
-    
-    platform_window_pool_events(_state.platform);
 
+
+    platform_window_pool_events(_state.platform);
+    renderer_context_clear(RGB(0, 0, 0.2f));
     update();
     draw();
-
-    renderer_context_swap_buffers(_state.ctx, RGB(0.0f, 0.0f, 0.5f));
+    renderer_context_swap_buffers(_state.ctx);
   }
 }
 
