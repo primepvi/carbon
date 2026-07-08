@@ -15,5 +15,6 @@ void vbo_free(VBO *vbo);
 void vbo_bind(VBO vbo);
 void vbo_unbind(void);
 void vbo_data(VBO vbo, const void *data, u32 size);
+void vbo_subdata(u32 offset, const void *data, u32 size);
 
 #endif

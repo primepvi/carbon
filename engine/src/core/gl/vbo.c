@@ -23,3 +23,7 @@ void vbo_unbind(void) {
 void vbo_data(VBO vbo, const void *data, u32 size) {
   glBufferData(GL_ARRAY_BUFFER, size, data, vbo.usage);
 }
+
+void vbo_subdata(u32 offset, const void *data, u32 size) {
+  glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
+}

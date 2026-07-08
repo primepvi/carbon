@@ -2,7 +2,7 @@
 #define CB_RENDERER_CONTEXT_H
 
 #include "../types.h"
-#include "../core/math/color.h"
+#include "core/math/color.h"
 
 typedef struct {
   void *descriptor;
