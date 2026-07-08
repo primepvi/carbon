@@ -29,7 +29,6 @@ void engine_run(EngineUpdateCallback update, EngineDrawCallback draw) {
       break;
     }
 
-
     platform_window_pool_events(_state.platform);
     renderer_context_clear(RGB(0, 0, 0.2f));
     update();

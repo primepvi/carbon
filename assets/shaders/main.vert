@@ -18,7 +18,7 @@ void main()
     v_texCoords = a_texCoords;
     v_texIndex = int(a_texIndex);
 
-    gl_Position = u_proj * vec4(a_pos, 0.0, 1.0);
+    gl_Position = u_proj * u_view * vec4(a_pos, 0.0, 1.0);
 }
 
 
