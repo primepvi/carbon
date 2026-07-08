@@ -2,7 +2,7 @@
 
 # About
 
-Carbon is a 2D Game Engine written in C, built on top of OpenGL (GLAD) and GLFW.
+Carbon is a 2D Game Engine written in C, built on top of OpenGL (GLAD).
 
 > [!WARNING]
 > Work in Progress
@@ -10,7 +10,7 @@ Carbon is a 2D Game Engine written in C, built on top of OpenGL (GLAD) and GLFW.
 ## Building
 
 ```console
-$ make
+$ make compile
 $ ./sandbox/sandbox
 ```
 

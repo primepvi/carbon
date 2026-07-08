@@ -1,24 +1,21 @@
-#include <core/window.h>
 #include <core/engine.h>
-#include <core/input.h>
 #include <core/logger.h>
+#include <platform/platform.h>
+#include <renderer/renderer_context.h>
 
-void update(f32 dt) {
-  if (input_key_pressed(KEY_ESCAPE))
-    engine_quit();
-}
-
+void update(void) {}
 void draw(void) {}
 
 int main(void) {
-  WindowConfig config = {
-      .width = 1080, .height = 720, .resizable = true, .title = "dust."};
+  Platform *platform = platform_new(800, 600, "Carbon");
+  RendererContext *ctx = renderer_context_new();
 
-  if (!engine_init(config))
-    return 1;
-
+  engine_init(platform, ctx);
   engine_run(update, draw);
-  engine_shutdown();
+
+  renderer_context_destroy(ctx);
+  platform_destroy(platform);
+
   CB_INFO("Engine Shutdown");
 
   return 0;

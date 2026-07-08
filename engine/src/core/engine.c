@@ -1,45 +1,40 @@
 #include "engine.h"
-#include "input.h"
 #include "math/utils.h"
 
 static struct {
-  f64 prev, time;
-  f32 dt;
-  bool should_quit;
+  Platform *platform;
+  RendererContext *ctx;
+  b8 running;
 } _state;
 
-b8 engine_init(WindowConfig cfg) {
-  if (!window_open(cfg))
-    return false;
+b8 engine_init(Platform *platform, RendererContext *ctx) {
+  _state.running = false;
+  _state.platform = platform;
+  _state.ctx = ctx;
 
-  input_init();
-
-  _state.prev = glfwGetTime();
-  _state.time = glfwGetTime();
-  _state.dt = 0.0f;
-  _state.should_quit = false;
+  platform_window_create(platform);
+  platform_window_attach_egl(platform, ctx);
+  renderer_context_make_current(ctx);
 
   return true;
 }
 
 void engine_run(EngineUpdateCallback update, EngineDrawCallback draw) {
-  while (!engine_should_quit()) {
-    f64 now = glfwGetTime();
-    f32 dt = MIN((f32)(now - _state.prev), ENGINE_MAX_DT);
-    _state.dt = dt;
-    _state.prev = now;
-    _state.time += dt;
+  _state.running = true;
 
-    input_update();
-    window_poll_events();
-    update(_state.dt);
+  while (_state.running) {
+    if (!_state.platform->running) {
+      engine_quit();
+      break;
+    }
+    
+    platform_window_pool_events(_state.platform);
+
+    update();
     draw();
-    window_swap_buffers();
+
+    renderer_context_swap_buffers(_state.ctx, RGB(0.0f, 0.0f, 0.5f));
   }
 }
 
-void engine_quit(void) { _state.should_quit = true; }
-void engine_shutdown(void) { window_close(); }
-f32 engine_dt(void) { return _state.dt; }
-f64 engine_time(void) { return _state.time; }
-b8 engine_should_quit(void) { return _state.should_quit || window_should_close(); }
+void engine_quit(void) { _state.running = false; }
