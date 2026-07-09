@@ -6,35 +6,32 @@
 #include <renderer/renderer.h>
 #include <renderer/renderer_context.h>
 
-Renderer *renderer;
+void update(Engine *engine) {}
+void draw(Engine *engine) {
+  renderer_prepare(engine->renderer);
 
-void update(void) {}
+  renderer_draw_quad(engine->renderer, VEC2(400.0f, 0.0f), VEC2(100, 100),
+                     COLOR_RED);
+  renderer_draw_quad(engine->renderer, VEC2(100.0f, 0.0f), VEC2(100, 100),
+                     COLOR_GREEN);
 
-void draw(void) {
-  renderer_prepare(renderer);
-
-  renderer_draw_quad(renderer, VEC2(400.0f, 0.0f), VEC2(100, 100), COLOR_RED);
-  renderer_draw_quad(renderer, VEC2(100.0f, 0.0f), VEC2(100, 100), COLOR_GREEN);
-  
-  renderer_flush(renderer);
+  renderer_flush(engine->renderer);
 }
 
 int main(void) {
-  Platform *platform = platform_new(800, 600, "Carbon");
-  RendererContext *ctx = renderer_context_new();
+  Engine engine = engine_new((EngineConfig){.window_width = 800,
+                                            .window_height = 600,
+                                            .window_title = "Carbon",
+                                            .update_callback = update,
+                                            .draw_callback = draw});
 
-  engine_init(platform, ctx);
+  engine_init(&engine);
 
   Shader shader =
       shader_from_files("assets/shaders/main.vert", "assets/shaders/main.frag");
-  
-  renderer = renderer_new(shader);
-  engine_run(update, draw);
 
-  renderer_context_destroy(ctx);
-  platform_destroy(platform);
-
-  CB_INFO("Engine Shutdown");
+  engine_run(&engine, shader);
+  engine_destroy(&engine);
 
   return 0;
 }

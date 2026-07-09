@@ -7,7 +7,7 @@
 static const char *read_shader_file(const char *path) {
   FILE *file = fopen(path, "rb");
   if (file == NULL) {
-    CB_ERROR("Cannot open shader file at: '%s'\n", path);
+    CB_ERROR("Cannot open shader file at: '%s'", path);
     return NULL;
   }
 
@@ -17,7 +17,7 @@ static const char *read_shader_file(const char *path) {
 
   char *buffer = malloc(len + 1);
   if (buffer == NULL) {
-    CB_ERROR("Cannot allocate buffer to read shader source.\n");
+    CB_ERROR("Cannot allocate buffer to read shader source.");
     return NULL;
   }
 
@@ -35,7 +35,7 @@ Shader shader_from_files(const char *vertex_path, const char *frag_path) {
 
   if (vertex_source == NULL || frag_source == NULL) {
     CB_FATAL("Cannot compile shader because invalid shader source has been "
-             "provided.\n");
+             "provided.");
   }
 
   return shader_from_sources(vertex_source, frag_source);
@@ -54,7 +54,7 @@ Shader shader_from_sources(const char *vertex_source, const char *frag_source) {
 
     char *log_buf = malloc(log_len);
     glGetShaderInfoLog(vertex_id, log_len, NULL, log_buf);
-    CB_FATAL("Cannot compile vertex shader.\nError: %s\nSource: %s\n",
+    CB_FATAL("Cannot compile vertex shader.\nError: %s\nSource: %s",
              log_buf, vertex_source);
   }
 
@@ -70,7 +70,7 @@ Shader shader_from_sources(const char *vertex_source, const char *frag_source) {
 
     char *log_buf = malloc(log_len);
     glGetShaderInfoLog(frag_id, log_len, NULL, log_buf);
-    CB_FATAL("Cannot compile fragment shader.\nError: %s\nSource: %s\n",
+    CB_FATAL("Cannot compile fragment shader.\nError: %s\nSource: %s",
              log_buf, frag_source);
   }
 
@@ -87,7 +87,7 @@ Shader shader_from_sources(const char *vertex_source, const char *frag_source) {
 
     char *log_buf = malloc(log_len);
     glGetProgramInfoLog(shader.id, log_len, NULL, log_buf);
-    CB_FATAL("Cannot link shader program.\nError: %s\n", log_buf);
+    CB_FATAL("Cannot link shader program.\nError: %s", log_buf);
   }
 
   glDeleteShader(vertex_id);

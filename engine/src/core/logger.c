@@ -33,7 +33,7 @@ void logger_push(LogLevel level, const char *file, u32 line, const char *fmt,
   va_end(args);
 
   FILE *stream = (level <= LOG_LEVEL_ERROR) ? stderr : stdout;
-  fprintf(stream, "%s%s [%s] %s%s \033[90m (%s:%u)" ANSI_RESET,
+  fprintf(stream, "%s%s [%s] %s%s \033[90m (%s:%u)\n" ANSI_RESET,
           level_colors[level], ts, level_labels[level], message, ANSI_RESET,
           file, line);
   

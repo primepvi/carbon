@@ -47,11 +47,11 @@ void renderer_context_make_current(RendererContext *ctx) {
   RendererContextEGL *descriptor = ctx->descriptor;
 
   if (descriptor->display == EGL_NO_DISPLAY) {
-    CB_FATAL("Egl display must be attached.\nEGL error: 0x%x\n", eglGetError());
+    CB_FATAL("Egl display must be attached.\nEGL error: 0x%x", eglGetError());
   }
 
   if (!eglInitialize(descriptor->display, NULL, NULL)) {
-    CB_FATAL("Cannot initialize egl.\nEGL error: 0x%x\n", eglGetError());
+    CB_FATAL("Cannot initialize egl.\nEGL error: 0x%x", eglGetError());
   }
 
   EGLConfig config;
@@ -59,31 +59,31 @@ void renderer_context_make_current(RendererContext *ctx) {
 
   if (!eglChooseConfig(descriptor->display, EGL_CONFIG_ATTRIBS, &config, 1,
                        &config_size)) {
-    CB_FATAL("Cannot choose egl config.\nEGL error: 0x%x\n", eglGetError());
+    CB_FATAL("Cannot choose egl config.\nEGL error: 0x%x", eglGetError());
   }
 
   descriptor->surface = eglCreateWindowSurface(descriptor->display, config,
                                                descriptor->window, NULL);
 
   if (descriptor->surface == EGL_NO_SURFACE) {
-    CB_FATAL("Cannot create egl window surface.\nEGL error: 0x%x\n",
+    CB_FATAL("Cannot create egl window surface.\nEGL error: 0x%x",
              eglGetError());
   }
 
   if (!eglBindAPI(EGL_OPENGL_API)) {
-    CB_FATAL("Cannot bind OpenGL API.\nEGL error: 0x%x\n", eglGetError());
+    CB_FATAL("Cannot bind OpenGL API.\nEGL error: 0x%x", eglGetError());
   }
 
   descriptor->context = eglCreateContext(descriptor->display, config,
                                          EGL_NO_CONTEXT, EGL_CONTEXT_ATTRIBS);
 
   if (descriptor->context == EGL_NO_CONTEXT) {
-    CB_FATAL("Cannot create egl context.\nEGL error: 0x%x\n", eglGetError());
+    CB_FATAL("Cannot create egl context.\nEGL error: 0x%x", eglGetError());
   }
 
   if (!eglMakeCurrent(descriptor->display, descriptor->surface,
                       descriptor->surface, descriptor->context)) {
-    CB_FATAL("Cannot make egl context current.\nEGL error: 0x%x\n",
+    CB_FATAL("Cannot make egl context current.\nEGL error: 0x%x",
              eglGetError());
   }
 

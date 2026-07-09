@@ -10,7 +10,7 @@ Texture texture_from_file(const char *path, b8 flip) {
   u8 *data = stbi_load(path, &width, &height, &channels, 0);
   if (data == NULL) {
     stbi_image_free(data);
-    CB_ERROR("Cannot load texture from file: %s\n", path);
+    CB_ERROR("Cannot load texture from file: %s", path);
     return texture_white_1x1();
   }
 
