@@ -3,15 +3,15 @@
 
 #include <stb_image.h>
 
-Texture texture_from_file(const char *path) {
-  // stbi_set_flip_vertically_on_load(true);
+Texture texture_from_file(const char *path, b8 flip) {
+  stbi_set_flip_vertically_on_load(flip);
 
   i32 width, height, channels;
   u8 *data = stbi_load(path, &width, &height, &channels, 0);
   if (data == NULL) {
     stbi_image_free(data);
-    CB_FATAL("Cannot load texture from file: %s\n", path);
-    return (Texture){0};
+    CB_ERROR("Cannot load texture from file: %s\n", path);
+    return texture_white_1x1();
   }
 
   Texture tex = texture_from_buffer(data, width, height, channels);
@@ -40,7 +40,7 @@ Texture texture_from_buffer(const u8 *buffer, i32 width, i32 height,
   glBindTexture(GL_TEXTURE_2D, tex.id);
   glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
                GL_UNSIGNED_BYTE, buffer);
-  
+
   glGenerateMipmap(GL_TEXTURE_2D);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

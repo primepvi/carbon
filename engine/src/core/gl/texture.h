@@ -9,7 +9,7 @@ typedef struct {
   u32 width, height, channels;
 } Texture;
 
-Texture texture_from_file(const char *path);
+Texture texture_from_file(const char *path, b8 flip);
 Texture texture_from_buffer(const u8 *buffer, i32 width,
                             i32 height, i32 channels);
 Texture texture_white_1x1(void);
