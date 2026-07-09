@@ -1,6 +1,7 @@
 #include "logger.h"
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 #define ANSI_RESET "\033[0m"
@@ -38,6 +39,6 @@ void logger_push(LogLevel level, const char *file, u32 line, const char *fmt,
   
   if (level == LOG_LEVEL_FATAL) {
     fflush(stderr);
-    __builtin_trap();
+    exit(1);
   }
 }

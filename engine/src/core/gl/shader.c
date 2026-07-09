@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "core/logger.h"
 #include "shader.h"
 
 static const char *read_shader_file(const char *path) {
   FILE *file = fopen(path, "rb");
   if (file == NULL) {
-    fprintf(stderr, "dust -> cannot open shader file at: '%s'", path);
+    CB_ERROR("Cannot open shader file at: '%s'\n", path);
     return NULL;
   }
 
@@ -16,7 +17,7 @@ static const char *read_shader_file(const char *path) {
 
   char *buffer = malloc(len + 1);
   if (buffer == NULL) {
-    fprintf(stderr, "dust -> cannot allocate buffer to read shader source.");
+    CB_ERROR("Cannot allocate buffer to read shader source.\n");
     return NULL;
   }
 
@@ -33,9 +34,8 @@ Shader shader_from_files(const char *vertex_path, const char *frag_path) {
   const char *frag_source = read_shader_file(frag_path);
 
   if (vertex_source == NULL || frag_source == NULL) {
-    fprintf(stderr, "dust -> cannot compile shader because invalid shader "
-                    "source has been provided.");
-    return (Shader){0};
+    CB_FATAL("Cannot compile shader because invalid shader source has been "
+             "provided.\n");
   }
 
   return shader_from_sources(vertex_source, frag_source);
@@ -46,14 +46,49 @@ Shader shader_from_sources(const char *vertex_source, const char *frag_source) {
   glShaderSource(vertex_id, 1, &vertex_source, NULL);
   glCompileShader(vertex_id);
 
+  GLint vertex_compiled = 1;
+  glGetShaderiv(vertex_id, GL_COMPILE_STATUS, &vertex_compiled);
+  if (!vertex_compiled) {
+    GLint log_len = 0;
+    glGetShaderiv(vertex_id, GL_INFO_LOG_LENGTH, &log_len);
+
+    char *log_buf = malloc(log_len);
+    glGetShaderInfoLog(vertex_id, log_len, NULL, log_buf);
+    CB_FATAL("Cannot compile vertex shader.\nError: %s\nSource: %s\n",
+             log_buf, vertex_source);
+  }
+
   GLuint frag_id = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(frag_id, 1, &frag_source, NULL);
   glCompileShader(frag_id);
+
+  GLint frag_compiled = 1;
+  glGetShaderiv(frag_id, GL_COMPILE_STATUS, &frag_compiled);
+  if (!frag_compiled) {
+    GLint log_len = 0;
+    glGetShaderiv(frag_id, GL_INFO_LOG_LENGTH, &log_len);
+
+    char *log_buf = malloc(log_len);
+    glGetShaderInfoLog(frag_id, log_len, NULL, log_buf);
+    CB_FATAL("Cannot compile fragment shader.\nError: %s\nSource: %s\n",
+             log_buf, frag_source);
+  }
 
   Shader shader = {.id = glCreateProgram()};
   glAttachShader(shader.id, vertex_id);
   glAttachShader(shader.id, frag_id);
   glLinkProgram(shader.id);
+
+  GLint shader_linked = 1;
+  glGetProgramiv(shader.id, GL_LINK_STATUS, &shader_linked);
+  if (!shader_linked) {
+    GLint log_len = 0;
+    glGetProgramiv(shader.id, GL_INFO_LOG_LENGTH, &log_len);
+
+    char *log_buf = malloc(log_len);
+    glGetProgramInfoLog(shader.id, log_len, NULL, log_buf);
+    CB_FATAL("Cannot link shader program.\nError: %s\n", log_buf);
+  }
 
   glDeleteShader(vertex_id);
   glDeleteShader(frag_id);
