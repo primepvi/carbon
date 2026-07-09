@@ -11,12 +11,12 @@ Renderer *renderer;
 void update(void) {}
 
 void draw(void) {
-  renderer_begin(renderer);
+  renderer_prepare(renderer);
 
   renderer_draw_quad(renderer, VEC2(400.0f, 0.0f), VEC2(100, 100), COLOR_RED);
   renderer_draw_quad(renderer, VEC2(100.0f, 0.0f), VEC2(100, 100), COLOR_GREEN);
   
-  renderer_end(renderer);
+  renderer_flush(renderer);
 }
 
 int main(void) {

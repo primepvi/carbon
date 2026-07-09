@@ -45,8 +45,10 @@ typedef struct {
 CB_API Renderer *renderer_new(Shader shader);
 CB_API void renderer_destroy(Renderer *renderer);
 
-CB_API void renderer_begin(Renderer *renderer);
-CB_API void renderer_end(Renderer *renderer);
+b8 renderer_should_flush(Renderer *renderer);
+
+CB_API void renderer_prepare(Renderer *renderer);
+CB_API void renderer_flush(Renderer *renderer);
 CB_API void renderer_draw_quad(Renderer *renderer, Vec2 position, Vec2 size,
                                Color color);
 

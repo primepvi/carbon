@@ -39,15 +39,19 @@ void renderer_destroy(Renderer *renderer) {
   free(renderer);
 }
 
-void renderer_begin(Renderer *renderer) {
+void renderer_prepare(Renderer *renderer) {
   RendererBatch *batch = renderer->batch;
+  batch->textures_count = 1;
   batch->indices_count = 0;
   batch->vertices_count = 0;
-  renderer->batch = batch;
 }
 
 void renderer_draw_quad(Renderer *renderer, Vec2 position, Vec2 size,
                         Color color) {
+  if (renderer_should_flush(renderer)) {
+    renderer_flush(renderer);
+  }
+
   RendererVertex top_left;
   top_left.position = position;
   top_left.texture_coords = VEC2(0.0f, 1.0f);
@@ -88,7 +92,7 @@ void renderer_draw_quad(Renderer *renderer, Vec2 position, Vec2 size,
   batch->vertices[batch->vertices_count++] = bottom_left;
 }
 
-void renderer_end(Renderer *renderer) {
+void renderer_flush(Renderer *renderer) {
   RendererBatch *batch = renderer->batch;
 
   shader_bind(renderer->shader);
@@ -116,4 +120,13 @@ void renderer_end(Renderer *renderer) {
 
   vao_bind(batch->vao);
   glDrawElements(GL_TRIANGLES, batch->indices_count, GL_UNSIGNED_INT, NULL);
+
+  renderer_prepare(renderer);
+}
+
+b8 renderer_should_flush(Renderer *renderer) {
+  RendererBatch *batch = renderer->batch;
+  return batch->textures_count >= 16 ||
+         batch->vertices_count >= RENDERER_BATCH_MAX_VERTICES ||
+         batch->indices_count >= RENDERER_BATCH_MAX_INDICES;
 }
