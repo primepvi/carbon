@@ -31,6 +31,14 @@ Application application_new(ApplicationConfig config) {
                        .delta_time = 0.0f};
 }
 
+Renderer *application_get_renderer(Application *application) {
+  if (!application->running) {
+    CB_FATAL("Cannot get application renderer if application isn't running.");
+  }
+  
+  return application->renderer;
+}
+
 void application_destroy(Application *application) {
   renderer_context_destroy(application->ctx);
   platform_destroy(application->platform);
@@ -53,7 +61,7 @@ void application_init(Application *application) {
   application->renderer = renderer_new(shader);
   application->running = true;
 
-  CB_INFO("Application is now running.");
+  CB_DEBUG("Application is now running.");
 }
 
 void application_begin_frame(Application *application) {
@@ -85,5 +93,5 @@ b8 application_should_close(Application *application) {
 
 void application_quit(Application *application) {
   application->running = false;
-  CB_INFO("Application Shutdown.");
+  CB_DEBUG("Application Shutdown.");
 }

@@ -21,6 +21,7 @@ typedef struct Application {
 } Application;
 
 CB_API Application application_new(ApplicationConfig config);
+CB_API Renderer *application_get_renderer(Application *app);
 
 CB_API void application_init(Application *app);
 CB_API void application_begin_frame(Application *app);

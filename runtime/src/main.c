@@ -7,10 +7,12 @@ int main(void) {
   Application app = application_new(app_config);
   application_init(&app);
 
+  Renderer *renderer = application_get_renderer(&app);
+
   while (!application_should_close(&app)) {
     application_begin_frame(&app);
 
-    renderer_draw_quad(app.renderer, VEC2(100.0f, 100.0f), VEC2(50, 50),
+    renderer_draw_quad(renderer, VEC2(100.0f, 100.0f), VEC2(50, 50),
                        COLOR_WHITE);
 
     application_end_frame(&app);
