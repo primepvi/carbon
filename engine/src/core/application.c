@@ -1,4 +1,4 @@
-#include <cb_runtime/core/application.h>
+#include <cb_engine/core/application.h>
 #include <cb_engine/core/input.h>
 #include <cb_engine/core/logger.h>
 #include <cb_engine/math/utils.h>
@@ -13,18 +13,22 @@ f64 application_time_now(void) {
   return ts.tv_sec + ts.tv_nsec / 1000000000.0;
 }
 
+f64 application_delta_time(Application *app) {
+  return app->delta_time;
+}
+
 Application application_new(ApplicationConfig config) {
   Platform *platform = platform_new(config.window_width, config.window_height,
                                     config.window_title);
 
   RendererContext *ctx = renderer_context_new();
 
-  return (Application){.config = config,
-                       .ctx = ctx,
+  return (Application){.ctx = ctx,
                        .platform = platform,
                        .running = false,
                        .renderer = NULL,
-                       .last_time = application_time_now()};
+                       .last_time = application_time_now(),
+                       .delta_time = 0.0f};
 }
 
 void application_destroy(Application *application) {
@@ -36,17 +40,13 @@ void application_destroy(Application *application) {
   }
 }
 
-b8 application_init(Application *application) {
+void application_init(Application *application) {
   platform_window_create(application->platform);
   platform_window_attach_egl(application->platform, application->ctx);
   renderer_context_make_current(application->ctx);
   renderer_context_viewport(application->platform->width,
                             application->platform->height);
 
-  return true;
-}
-
-void application_run(Application *application) {
   Shader shader =
       shader_from_files("assets/shaders/main.vert", "assets/shaders/main.frag");
 
@@ -54,33 +54,36 @@ void application_run(Application *application) {
   application->running = true;
 
   CB_INFO("Application is now running.");
+}
 
-  while (application->running) {
-    if (!application->platform->running) {
-      application_quit(application);
-      break;
-    }
+void application_begin_frame(Application *application) {
+  if (!application->platform->running)
+    application_quit(application);
 
-    f64 current_time = application_time_now();
-    f64 delta_time = current_time - application->last_time;
-    application->last_time = current_time;
+  f64 current_time = application_time_now();
+  application->delta_time = current_time - application->last_time;
+  application->last_time = current_time;
 
-    input_begin_frame();
-    platform_window_pool_events(application->platform);
+  input_begin_frame();
+  platform_window_pool_events(application->platform);
 
-    renderer_context_clear(RGB(0, 0, 0.1f));
-    renderer_prepare(application->renderer);
+  renderer_context_clear(RGB(0, 0, 0.1f));
+  renderer_prepare(application->renderer);
+}
 
-    application->config.update(delta_time);
-    application->config.draw(application->renderer);
+void application_end_frame(Application *application) {
+  if (!application->platform->running)
+    application_quit(application);
 
-    renderer_flush(application->renderer);
-    renderer_context_swap_buffers(application->ctx);
-  }
+  renderer_flush(application->renderer);
+  renderer_context_swap_buffers(application->ctx);
+}
+
+b8 application_should_close(Application *application) {
+  return !application->running;
 }
 
 void application_quit(Application *application) {
   application->running = false;
-
   CB_INFO("Application Shutdown.");
 }
