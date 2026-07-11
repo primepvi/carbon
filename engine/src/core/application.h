@@ -15,7 +15,7 @@ typedef struct {
   u32 window_height;
 
   void (*draw)(Renderer *);
-  void (*update)(void);
+  void (*update)(f64 delta_time);
 } ApplicationConfig;
 
 typedef struct Application {
@@ -25,6 +25,8 @@ typedef struct Application {
   RendererContext *ctx;
   Assets *assets;
   b8 running;
+
+  f64 last_time;
 } Application;
 
 CB_API Application application_new(ApplicationConfig config);
@@ -34,5 +36,7 @@ CB_API void application_quit(Application *app);
 CB_API void application_destroy(Application *app);
 CB_API void application_load_texture(Application *app, const char *path,
                                      const char *name);
+
+CB_API f64 application_time_now(void);
 
 #endif

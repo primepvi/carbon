@@ -1,7 +1,16 @@
 #include "application.h"
+#include "core/input.h"
 #include "core/logger.h"
 #include "math/utils.h"
 #include <stdlib.h>
+#include <time.h>
+
+f64 application_time_now(void) {
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+
+  return ts.tv_sec + ts.tv_nsec / 1000000000.0;
+}
 
 Application application_new(ApplicationConfig config) {
   Platform *platform = platform_new(config.window_width, config.window_height,
@@ -14,7 +23,8 @@ Application application_new(ApplicationConfig config) {
                        .platform = platform,
                        .running = false,
                        .renderer = NULL,
-                       .assets = assets_new()};
+                       .assets = assets_new(),
+                       .last_time = application_time_now()};
 }
 
 void application_destroy(Application *application) {
@@ -51,12 +61,17 @@ void application_run(Application *application) {
       break;
     }
 
+    f64 current_time = application_time_now();
+    f64 delta_time = current_time - application->last_time;
+    application->last_time = current_time;
+
+    input_begin_frame();
     platform_window_pool_events(application->platform);
 
     renderer_context_clear(RGB(0, 0, 0.1f));
     renderer_prepare(application->renderer);
 
-    application->config.update();
+    application->config.update(delta_time);
     application->config.draw(application->renderer);
 
     renderer_flush(application->renderer);
