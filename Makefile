@@ -1,16 +1,16 @@
-.PHONY: all engine sandbox clean compile
+.PHONY: all engine runtime clean compile
 
-all: engine sandbox
+all: engine runtime
 
 engine:
 	$(MAKE) -C engine
 
-sandbox: engine
-	$(MAKE) -C sandbox
+runtime: engine
+	$(MAKE) -C runtime
 
 clean:
 	$(MAKE) -C engine clean
-	$(MAKE) -C sandbox clean
+	$(MAKE) -C runtime clean
 	rm -f compile_commands.json
 
 compile:

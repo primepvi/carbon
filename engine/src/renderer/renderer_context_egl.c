@@ -1,6 +1,6 @@
-#include "renderer_context_egl.h"
-#include "core/logger.h"
-#include "renderer_context.h"
+#include <cb_engine/renderer/renderer_context_egl.h>
+#include <cb_engine/renderer/renderer_context.h>
+#include <cb_engine/core/logger.h>
 #include <stdlib.h>
 
 static EGLint EGL_CONFIG_ATTRIBS[] = {EGL_SURFACE_TYPE,

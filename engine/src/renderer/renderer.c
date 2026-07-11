@@ -1,10 +1,11 @@
-#include "renderer.h"
-#include "core/logger.h"
+#include <cb_engine/renderer/renderer.h>
+#include <cb_engine/core/logger.h>
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-Renderer *renderer_new(Shader shader, Assets *assets) {
+Renderer *renderer_new(Shader shader) {
   RendererBatch *batch = calloc(1, sizeof(RendererBatch));
   batch->textures[batch->textures_count++] = texture_white_1x1();
   batch->vbo = vbo_new(GL_DYNAMIC_DRAW);
@@ -20,18 +21,17 @@ Renderer *renderer_new(Shader shader, Assets *assets) {
   ebo_bind(batch->ebo);
   ebo_data(batch->ebo, NULL, RENDERER_BATCH_MAX_INDICES * sizeof(u32));
 
-  vao_attrib(batch->vao, 0, 2, GL_FLOAT, sizeof(RendererVertex), 0);
-  vao_attrib(batch->vao, 1, 2, GL_FLOAT, sizeof(RendererVertex),
+  vao_attrib(0, 2, GL_FLOAT, sizeof(RendererVertex), 0);
+  vao_attrib(1, 2, GL_FLOAT, sizeof(RendererVertex),
              offsetof(RendererVertex, texture_coords));
-  vao_attrib(batch->vao, 2, 1, GL_FLOAT, sizeof(RendererVertex),
+  vao_attrib(2, 1, GL_FLOAT, sizeof(RendererVertex),
              offsetof(RendererVertex, texture_index));
-  vao_attrib(batch->vao, 3, 4, GL_FLOAT, sizeof(RendererVertex),
+  vao_attrib(3, 4, GL_FLOAT, sizeof(RendererVertex),
              offsetof(RendererVertex, color));
 
   Renderer *renderer = malloc(sizeof(Renderer));
   renderer->batch = batch;
   renderer->shader = shader;
-  renderer->assets = assets;
 
   return renderer;
 }
@@ -94,20 +94,26 @@ void renderer_draw_quad(Renderer *renderer, Vec2 position, Vec2 size,
   batch->vertices[batch->vertices_count++] = bottom_left;
 }
 
-void renderer_draw_sprite(Renderer *renderer, Vec2 position, Vec2 size,
-                          const char *sprite_name) {
+void renderer_draw_texture(Renderer *renderer, Vec2 position, Vec2 size,
+                           Texture *texture) {
   if (renderer_should_flush(renderer)) {
     renderer_flush(renderer);
   }
 
-  if (!assets_has_texture(renderer->assets, sprite_name)) {
-    CB_FATAL("Texture '%s' has not loaded.", sprite_name);
+  RendererBatch *batch = renderer->batch;
+
+  i32 texture_index = -1;
+  for (u32 i = 0; i < batch->textures_count; i++) {
+    Texture *current = &batch->textures[i];
+    if (current->id == texture->id) {
+      texture_index = i;
+    }
   }
 
-  RendererBatch *batch = renderer->batch;
-  u32 texture_index = batch->textures_count;
-  batch->textures[batch->textures_count++] =
-      *assets_get_texture(renderer->assets, sprite_name);
+  if (texture_index < 0) {
+    texture_index = batch->textures_count;
+    batch->textures[batch->textures_count++] = *texture;
+  }
 
   RendererVertex top_left;
   top_left.position = position;

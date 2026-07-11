@@ -1,4 +1,6 @@
-#include "hashmap.h"
+#include <cb_engine/core/hashmap.h>
+#include <cb_engine/types.h>
+
 #include <stdlib.h>
 #include <string.h>
 

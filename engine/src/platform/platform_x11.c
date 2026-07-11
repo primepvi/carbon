@@ -1,15 +1,15 @@
-#include "platform_x11.h"
-#include "core/logger.h"
-#include "platform.h"
-#include "renderer/renderer_context_egl.h"
+#include <cb_engine/platform/platform.h>
+#include <cb_engine/platform/platform_x11.h>
+
+#include <cb_engine/core/logger.h>
+#include <cb_engine/core/input.h>
+#include <cb_engine/renderer/renderer_context_egl.h>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "core/input.h"
 #include <X11/keysym.h>
 
 Platform *platform_new(u32 width, u32 height, const char *title) {

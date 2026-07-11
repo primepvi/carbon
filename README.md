@@ -11,7 +11,7 @@ Carbon is a 2D Game Engine written in C, built on top of OpenGL (GLAD).
 
 ```console
 $ make compile
-$ ./sandbox/sandbox
+$ ./runtime/runtime
 ```
 
 ## License

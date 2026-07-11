@@ -1,4 +1,4 @@
-#include "input.h"
+#include <cb_engine/core/input.h>
 
 Input input = {0};
 
