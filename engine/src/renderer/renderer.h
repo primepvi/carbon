@@ -2,13 +2,15 @@
 #define CB_RENDERER_H
 
 #include "core/gl/ebo.h"
+#include "core/gl/shader.h"
 #include "core/gl/texture.h"
 #include "core/gl/vao.h"
 #include "core/gl/vbo.h"
-#include "core/gl/shader.h"
 
 #include "core/math/color.h"
 #include "core/math/vec2.h"
+
+#include "core/assets.h"
 
 #include "types.h"
 
@@ -40,9 +42,10 @@ typedef struct {
 typedef struct {
   RendererBatch *batch;
   Shader shader;
+  Assets *assets;
 } Renderer;
 
-CB_API Renderer *renderer_new(Shader shader);
+CB_API Renderer *renderer_new(Shader shader, Assets *assets);
 CB_API void renderer_destroy(Renderer *renderer);
 
 b8 renderer_should_flush(Renderer *renderer);
@@ -51,5 +54,7 @@ CB_API void renderer_prepare(Renderer *renderer);
 CB_API void renderer_flush(Renderer *renderer);
 CB_API void renderer_draw_quad(Renderer *renderer, Vec2 position, Vec2 size,
                                Color color);
+CB_API void renderer_draw_sprite(Renderer *renderer, Vec2 position, Vec2 size,
+                                 const char *sprite_name);
 
 #endif

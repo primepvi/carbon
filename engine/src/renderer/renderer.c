@@ -1,9 +1,10 @@
 #include "renderer.h"
+#include "core/logger.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-Renderer *renderer_new(Shader shader) {
+Renderer *renderer_new(Shader shader, Assets *assets) {
   RendererBatch *batch = calloc(1, sizeof(RendererBatch));
   batch->textures[batch->textures_count++] = texture_white_1x1();
   batch->vbo = vbo_new(GL_DYNAMIC_DRAW);
@@ -30,6 +31,7 @@ Renderer *renderer_new(Shader shader) {
   Renderer *renderer = malloc(sizeof(Renderer));
   renderer->batch = batch;
   renderer->shader = shader;
+  renderer->assets = assets;
 
   return renderer;
 }
@@ -77,6 +79,59 @@ void renderer_draw_quad(Renderer *renderer, Vec2 position, Vec2 size,
   bottom_right.color = color;
 
   RendererBatch *batch = renderer->batch;
+
+  u32 vertices_base = batch->vertices_count;
+  batch->indices[batch->indices_count++] = vertices_base + 0;
+  batch->indices[batch->indices_count++] = vertices_base + 1;
+  batch->indices[batch->indices_count++] = vertices_base + 2;
+  batch->indices[batch->indices_count++] = vertices_base + 0;
+  batch->indices[batch->indices_count++] = vertices_base + 2;
+  batch->indices[batch->indices_count++] = vertices_base + 3;
+
+  batch->vertices[batch->vertices_count++] = top_left;
+  batch->vertices[batch->vertices_count++] = top_right;
+  batch->vertices[batch->vertices_count++] = bottom_right;
+  batch->vertices[batch->vertices_count++] = bottom_left;
+}
+
+void renderer_draw_sprite(Renderer *renderer, Vec2 position, Vec2 size,
+                          const char *sprite_name) {
+  if (renderer_should_flush(renderer)) {
+    renderer_flush(renderer);
+  }
+
+  if (!assets_has_texture(renderer->assets, sprite_name)) {
+    CB_FATAL("Texture '%s' has not loaded.", sprite_name);
+  }
+
+  RendererBatch *batch = renderer->batch;
+  u32 texture_index = batch->textures_count;
+  batch->textures[batch->textures_count++] =
+      *assets_get_texture(renderer->assets, sprite_name);
+
+  RendererVertex top_left;
+  top_left.position = position;
+  top_left.texture_coords = VEC2(0.0f, 1.0f);
+  top_left.texture_index = texture_index;
+  top_left.color = COLOR_WHITE;
+
+  RendererVertex top_right;
+  top_right.position = VEC2(position.x + size.x, position.y);
+  top_right.texture_coords = VEC2(1.0f, 1.0f);
+  top_right.texture_index = texture_index;
+  top_right.color = COLOR_WHITE;
+
+  RendererVertex bottom_left;
+  bottom_left.position = VEC2(position.x, position.y + size.y);
+  bottom_left.texture_coords = VEC2(0.0f, 0.0f);
+  bottom_left.texture_index = texture_index;
+  bottom_left.color = COLOR_WHITE;
+
+  RendererVertex bottom_right;
+  bottom_right.position = VEC2(position.x + size.x, position.y + size.y);
+  bottom_right.texture_coords = VEC2(1.0f, 0.0f);
+  bottom_right.texture_index = texture_index;
+  bottom_right.color = COLOR_WHITE;
 
   u32 vertices_base = batch->vertices_count;
   batch->indices[batch->indices_count++] = vertices_base + 0;
