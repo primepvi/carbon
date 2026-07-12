@@ -28,6 +28,16 @@ void array_list_push(ArrayList *array, void *element) {
          element, array->element_size);
 }
 
+b8 array_list_replace(ArrayList *array, u32 index, void *element) {
+  if (index >= array->buf_length) {
+    return false;
+  }
+
+  memcpy((u8 *)array->buf + index * array->element_size, element,
+         array->element_size);
+  return true;
+}
+
 void *array_list_pop(ArrayList *array) {
   if (array->buf_length == 0) {
     return NULL;
