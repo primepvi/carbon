@@ -18,7 +18,7 @@ void array_list_destroy(ArrayList *array) {
   free(array);
 }
 
-void array_list_push(ArrayList *array, void *element) {
+u32 array_list_push(ArrayList *array, void *element) {
   if (array->buf_length >= array->buf_capacity) {
     array->buf_capacity *= 2;
     array->buf = realloc(array->buf, array->element_size * array->buf_capacity);
@@ -26,6 +26,9 @@ void array_list_push(ArrayList *array, void *element) {
 
   memcpy((u8 *)array->buf + (array->buf_length++) * array->element_size,
          element, array->element_size);
+
+  // return element index
+  return array->buf_length - 1;
 }
 
 b8 array_list_replace(ArrayList *array, u32 index, void *element) {
@@ -53,6 +56,20 @@ void *array_list_at(ArrayList *array, u32 index) {
   }
 
   return (u8 *)array->buf + index * array->element_size;
+}
+
+i32 array_list_find_index(ArrayList *array, ArrayListComparatorFn comparator, void *expected) {
+  i32 index = -1;
+  for (u32 i = 0; i < array->buf_length; i++) {
+    void *current = array_list_at(array, i);
+    
+    if (comparator(current, expected)) {
+      index = i;
+      break;
+    }
+  }
+
+  return index;
 }
 
 u32 array_list_length(ArrayList *array) { return array->buf_length; }
