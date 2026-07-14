@@ -3,12 +3,14 @@
 
 #include <cb_engine/types.h>
 
+#define CB_INVALID_HANDLE -1
+
 typedef enum {
   COMPONENT_INVALID = -1,
   COMPONENT_SPRITE,
 } ComponentKind;
 
-typedef u32 ComponentHandle;
+typedef i32 ComponentHandle;
 
 typedef struct {
   ComponentKind kind;

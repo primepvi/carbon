@@ -5,20 +5,22 @@
 #include <cb_engine/types.h>
 #include <cb_runtime/components/component.h>
 
+typedef i32 NodeHandle;
+
 typedef struct Node {
   char *name;
 
-  struct Node *parent;
+  NodeHandle parent;
 
   ArrayList *childrens;
   ArrayList *components;
 } Node;
 
-Node *node_new(Node *parent, const char *name);
+
+Node *node_new(NodeHandle parent, const char *name);
 void node_destroy(Node *node);
 
-void node_push_children(Node *node, Node *children);
-void node_push_component(Node *node, ComponentKind kind,
-                         ComponentHandle handle);
+void node_push_children(Node *node, NodeHandle children);
+void node_push_component(Node *node, Component component);
 
 #endif

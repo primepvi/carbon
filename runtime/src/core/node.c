@@ -4,12 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-Node *node_new(Node *parent, const char *name) {
+Node *node_new(NodeHandle parent, const char *name) {
   Node *node = malloc(sizeof(Node));
   node->parent = parent;
   node->name = strdup(name);
 
-  node->childrens = array_list_new(32, sizeof(Node));
+  node->childrens = array_list_new(32, sizeof(NodeHandle));
   node->components = array_list_new(32, sizeof(Component));
 
   return node;
@@ -27,11 +27,10 @@ void node_destroy(Node *node) {
   free(node);
 }
 
-void node_push_children(Node *node, Node *children) {
-  array_list_push(node->childrens, children);
+void node_push_children(Node *node, NodeHandle children) {
+  array_list_push(node->childrens, &children);
 }
 
-void node_push_component(Node *node, ComponentKind kind,
-                         ComponentHandle handle) {
-  array_list_push(node->components, &(Component){kind, handle});
+void node_push_component(Node *node, Component component) {
+  array_list_push(node->components, &component);
 }

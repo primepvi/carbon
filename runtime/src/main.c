@@ -1,6 +1,4 @@
 #include <cb_engine/core/application.h>
-#include <stdlib.h>
-
 #include <cb_runtime/components/sprite.h>
 #include <cb_runtime/core/assets.h>
 #include <cb_runtime/core/node.h>
@@ -14,19 +12,16 @@ int main(void) {
   application_init(&app);
 
   Assets *assets = assets_new();
+  Scene *scene = scene_new("Main");
 
   Texture *player_texture =
       assets_load_texture(assets, "assets/sprites/mario.png", "player");
-  Sprite *player_sprite =
+  Sprite player_sprite =
       sprite_with_texture(player_texture, VEC2(100, 100), VEC2(100, 100));
-
-  Scene *scene = scene_new("Main");
-  ComponentHandle player_sprite_handle =
-      scene_register_sprite(scene, player_sprite);
-
-  Node *player_node = node_new(NULL, "player");
-  node_push_component(player_node, COMPONENT_SPRITE, player_sprite_handle);
-  scene_append_node(scene, player_node);
+  Component player_sprite_component =
+      scene_create_component(scene, COMPONENT_SPRITE, &player_sprite);
+  NodeHandle player_node = scene_node_create(scene, "Player");
+  scene_node_attach_component(scene, player_node, &player_sprite_component);
 
   while (!application_should_close(&app)) {
     application_begin_frame(&app);
@@ -35,6 +30,7 @@ int main(void) {
   }
 
   application_destroy(&app);
+  assets_destroy(assets);
 
   return 0;
 }

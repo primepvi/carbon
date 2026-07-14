@@ -58,11 +58,13 @@ void *array_list_at(ArrayList *array, u32 index) {
   return (u8 *)array->buf + index * array->element_size;
 }
 
-i32 array_list_find_index(ArrayList *array, ArrayListComparatorFn comparator, void *expected) {
+i32 array_list_find_index(ArrayList *array,
+                          ArrayListTwoParamsComparatorFn comparator,
+                          void *expected) {
   i32 index = -1;
   for (u32 i = 0; i < array->buf_length; i++) {
     void *current = array_list_at(array, i);
-    
+
     if (comparator(current, expected)) {
       index = i;
       break;
@@ -70,6 +72,22 @@ i32 array_list_find_index(ArrayList *array, ArrayListComparatorFn comparator, vo
   }
 
   return index;
+}
+
+void *array_list_find(ArrayList *array,
+                      ArrayListSingleParamComparatorFn comparator) {
+  void *result = NULL;
+
+  for (u32 i = 0; i < array->buf_length; i++) {
+    void *current = array_list_at(array, i);
+
+    if (comparator(current)) {
+      result = current;
+      break;
+    }
+  }
+
+  return result;
 }
 
 u32 array_list_length(ArrayList *array) { return array->buf_length; }
