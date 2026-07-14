@@ -22,3 +22,7 @@ void script_destroy(Script *script, lua_State *lua_vm) {
   luaL_unref(lua_vm, LUA_REGISTRYINDEX, script->ref);
   free(script->path);
 }
+
+b8 script_component_kind_comparator(void *current) {
+  return ((Component*)current)->kind == COMPONENT_SCRIPT;
+};

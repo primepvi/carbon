@@ -12,5 +12,6 @@ void runtime_run(void);
 Assets *runtime_get_assets(void);
 Scene *runtime_get_scene(void);
 lua_State *runtime_get_luavm(void);
+Application *runtime_get_application(void);
 
 #endif

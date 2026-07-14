@@ -19,15 +19,17 @@ int main(void) {
 
   Component player_texture =
       assets_load_texture(assets, "assets/sprites/mario.png", "player_texture");
-
-  Component player_sprite_component =
+  Component player_script =
+      assets_load_script(assets, "assets/scripts/player.lua", "player_script");
+  Component player_sprite =
       assets_load_sprite(assets,
                          sprite_with_texture(player_texture.handle,
                                              VEC2(100, 100), VEC2(100, 100)),
                          "player_sprite");
 
   NodeHandle player_node = scene_node_create(scene, "Player");
-  scene_node_attach_component(scene, player_node, player_sprite_component);
+  scene_node_attach_component(scene, player_node, player_sprite);
+  scene_node_attach_component(scene, player_node, player_script);
 
   while (!application_should_close(&app)) {
     application_begin_frame(&app);

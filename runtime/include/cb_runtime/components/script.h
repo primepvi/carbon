@@ -16,4 +16,5 @@ typedef struct {
 Script script_new(const char *path, lua_State *lua_vm);
 void script_destroy(Script *script, lua_State *lua_vm);
 
+b8 script_component_kind_comparator(void *current);
 #endif

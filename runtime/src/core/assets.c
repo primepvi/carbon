@@ -18,6 +18,18 @@ Assets *assets_new(void) {
 }
 
 void assets_destroy(Assets *assets) {
+  for (u32 i = 0; i < array_list_length(assets->textures); i++) {
+    Texture *texture = array_list_at(assets->textures, i);
+    if (texture != NULL)
+      texture_free(texture);
+  }
+
+  for (u32 i = 0; i < array_list_length(assets->scripts); i++) {
+    Script *script = array_list_at(assets->scripts, i);
+    if (script != NULL)
+      script_destroy(script, runtime_get_luavm());
+  }
+
   array_list_destroy(assets->textures);
   array_list_destroy(assets->scripts);
   array_list_destroy(assets->sprites);

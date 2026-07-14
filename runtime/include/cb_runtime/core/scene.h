@@ -18,7 +18,9 @@ typedef struct {
 
 Scene *scene_new(const char *name);
 void scene_destroy(Scene *scene);
-void scene_render(Scene *scene, Renderer *renderer);
+
+void scene_draw(Scene *scene, Renderer *renderer);
+void scene_update(Scene *scene);
 
 NodeHandle scene_find_node(Scene *scene, const char *name);
 NodeHandle scene_node_create(Scene *scene, const char *name);

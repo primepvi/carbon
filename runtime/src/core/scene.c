@@ -22,19 +22,72 @@ void scene_destroy(Scene *scene) {
   array_list_destroy(scene->nodes);
 }
 
-void scene_render(Scene *scene, Renderer *renderer) {
+void scene_update(Scene *scene) {
   ArrayList *handles = scene->root->childrens;
 
   for (u32 i = 0; i < array_list_length(handles); i++) {
     NodeHandle curr_handle = *(NodeHandle *)array_list_at(handles, i);
     if (curr_handle == CB_INVALID_HANDLE) {
-      CB_ERROR("Invalid node handle found during %s render.", scene->name);
+      CB_ERROR("Invalid node handle found during %s update.", scene->name);
       continue;
     }
 
     Node *curr_node = array_list_at(scene->nodes, curr_handle);
     if (curr_node == NULL) {
-      CB_ERROR("Cannot find node with handle %d during %s render.", curr_handle,
+      CB_ERROR("Cannot find node with handle %d during %s update.", curr_handle,
+               scene->name);
+      continue;
+    }
+
+    Component *script_component = array_list_find(
+        curr_node->components, script_component_kind_comparator);
+    if (script_component == NULL)
+      continue;
+
+    Assets *assets = runtime_get_assets();
+    Script *script = assets_get_script(assets, script_component->handle);
+    if (script == NULL) {
+      CB_ERROR("Cannot find script with handle %d of node %s during %s update.",
+               script_component->handle, curr_node->name, scene->name);
+      continue;
+    }
+
+    Application *app = runtime_get_application();
+
+    lua_State *L = runtime_get_luavm();
+    lua_rawgeti(L, LUA_REGISTRYINDEX, script->ref);
+    lua_getfield(L, -1, "update");
+
+    if (!lua_isfunction(L, -1)) {
+      lua_pop(L, 2);
+      CB_DEBUG("Script in %s dont have an update function.", script->path);
+      continue;
+    }
+
+    lua_pushnumber(L, application_delta_time(app));
+    if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+      const char *error = lua_tostring(L, -1);
+      CB_ERROR("Lua Error\n Script Path: %s\n Error: %s", script->path, error);
+      lua_pop(L, 1);
+    }
+
+    lua_pop(L, 1);
+  }
+}
+
+void scene_draw(Scene *scene, Renderer *renderer) {
+  ArrayList *handles = scene->root->childrens;
+
+  for (u32 i = 0; i < array_list_length(handles); i++) {
+    NodeHandle curr_handle = *(NodeHandle *)array_list_at(handles, i);
+    if (curr_handle == CB_INVALID_HANDLE) {
+      CB_ERROR("Invalid node handle found during %s draw.", scene->name);
+      continue;
+    }
+
+    Node *curr_node = array_list_at(scene->nodes, curr_handle);
+    if (curr_node == NULL) {
+      CB_ERROR("Cannot find node with handle %d during %s draw.", curr_handle,
                scene->name);
       continue;
     }
@@ -47,7 +100,7 @@ void scene_render(Scene *scene, Renderer *renderer) {
     Assets *assets = runtime_get_assets();
     Sprite *sprite = assets_get_sprite(assets, sprite_component->handle);
     if (sprite == NULL) {
-      CB_ERROR("Cannot find sprite with handle %d of node %s during %s render.",
+      CB_ERROR("Cannot find sprite with handle %d of node %s during %s draw.",
                sprite_component->handle, curr_node->name, scene->name);
       continue;
     }
