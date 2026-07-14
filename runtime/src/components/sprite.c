@@ -2,9 +2,9 @@
 #include <cb_runtime/components/sprite.h>
 #include <stdlib.h>
 
-Sprite sprite_with_texture(Texture *texture, Vec2 position, Vec2 scale) {
+Sprite sprite_with_texture(TextureHandle texture_handle, Vec2 position, Vec2 scale) {
   Sprite sprite = {0};
-  sprite.texture = texture;
+  sprite.texture_handle = texture_handle;
   sprite.position = position;
   sprite.scale = scale;
 
@@ -16,6 +16,7 @@ Sprite sprite_with_texture(Texture *texture, Vec2 position, Vec2 scale) {
 
 Sprite sprite_with_color(Color color, Vec2 position, Vec2 scale) {
   Sprite sprite = {0};
+  sprite.texture_handle = CB_INVALID_HANDLE;
   sprite.color = color;
   sprite.position = position;
   sprite.scale = scale;

@@ -1,5 +1,6 @@
-#include "cb_engine/core/logger.h"
+#include <cb_engine/core/logger.h>
 #include <cb_runtime/components/sprite.h>
+#include <cb_runtime/core/runtime.h>
 #include <cb_runtime/core/scene.h>
 
 #include <stdlib.h>
@@ -9,8 +10,6 @@ Scene *scene_new(const char *name) {
   Scene *scene = malloc(sizeof(Scene));
   scene->name = strdup(name);
   scene->nodes = array_list_new(32, sizeof(Node));
-  scene->sprites = array_list_new(32, sizeof(Sprite));
-
   scene->root = node_new(SCENE_ROOT_NODE_HANDLE, "Root");
   array_list_push(scene->nodes, scene->root);
 
@@ -19,11 +18,8 @@ Scene *scene_new(const char *name) {
 
 void scene_destroy(Scene *scene) {
   free(scene->name);
-
   node_destroy(scene->root);
-
   array_list_destroy(scene->nodes);
-  array_list_destroy(scene->sprites);
 }
 
 void scene_render(Scene *scene, Renderer *renderer) {
@@ -48,35 +44,22 @@ void scene_render(Scene *scene, Renderer *renderer) {
     if (sprite_component == NULL)
       continue;
 
-    Sprite *sprite = array_list_at(scene->sprites, sprite_component->handle);
+    Assets *assets = runtime_get_assets();
+    Sprite *sprite = assets_get_sprite(assets, sprite_component->handle);
     if (sprite == NULL) {
       CB_ERROR("Cannot find sprite with handle %d of node %s during %s render.",
                sprite_component->handle, curr_node->name, scene->name);
       continue;
     }
 
-    if (sprite->texture == NULL)
+    if (sprite->texture_handle == CB_INVALID_HANDLE) {
       renderer_draw_quad(renderer, sprite->position, sprite->scale,
                          sprite->color);
-    else
-      renderer_draw_texture(renderer, sprite->position, sprite->scale,
-                            sprite->texture);
+    } else {
+      Texture *texture = assets_get_texture(assets, sprite->texture_handle);
+      renderer_draw_texture(renderer, sprite->position, sprite->scale, texture);
+    }
   }
-}
-
-Component scene_create_component(Scene *scene, ComponentKind kind, void *data) {
-  ComponentHandle handle;
-
-  switch (kind) {
-  case COMPONENT_SPRITE: {
-    handle = array_list_push(scene->sprites, data);
-    break;
-  }
-  default:
-    handle = CB_INVALID_HANDLE;
-  }
-
-  return (Component){kind, handle};
 }
 
 NodeHandle scene_find_node(Scene *scene, const char *name) {
@@ -137,7 +120,7 @@ NodeHandle scene_node_find_child(Scene *scene, NodeHandle parent_handle,
 }
 
 void scene_node_attach_component(Scene *scene, NodeHandle node_handle,
-                                 Component *component) {
+                                 Component component) {
   Node *node = array_list_at(scene->nodes, node_handle);
-  array_list_push(node->components, component);
+  array_list_push(node->components, &component);
 }

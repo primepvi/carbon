@@ -2,6 +2,7 @@
 #include <cb_runtime/components/sprite.h>
 #include <cb_runtime/core/assets.h>
 #include <cb_runtime/core/node.h>
+#include <cb_runtime/core/runtime.h>
 #include <cb_runtime/core/scene.h>
 
 int main(void) {
@@ -11,21 +12,26 @@ int main(void) {
   Application app = application_new(app_config);
   application_init(&app);
 
-  Assets *assets = assets_new();
-  Scene *scene = scene_new("Main");
+  runtime_init(&app, "Main");
 
-  Texture *player_texture =
-      assets_load_texture(assets, "assets/sprites/mario.png", "player");
-  Sprite player_sprite =
-      sprite_with_texture(player_texture, VEC2(100, 100), VEC2(100, 100));
+  Assets *assets = runtime_get_assets();
+  Scene *scene = runtime_get_scene();
+
+  Component player_texture =
+      assets_load_texture(assets, "assets/sprites/mario.png", "player_texture");
+
   Component player_sprite_component =
-      scene_create_component(scene, COMPONENT_SPRITE, &player_sprite);
+      assets_load_sprite(assets,
+                         sprite_with_texture(player_texture.handle,
+                                             VEC2(100, 100), VEC2(100, 100)),
+                         "player_sprite");
+
   NodeHandle player_node = scene_node_create(scene, "Player");
-  scene_node_attach_component(scene, player_node, &player_sprite_component);
+  scene_node_attach_component(scene, player_node, player_sprite_component);
 
   while (!application_should_close(&app)) {
     application_begin_frame(&app);
-    scene_render(scene, application_get_renderer(&app));
+    runtime_run();
     application_end_frame(&app);
   }
 

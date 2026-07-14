@@ -25,9 +25,12 @@ CB_API HashMap *hashmap_new(u32 capacity);
 CB_API void hashmap_destroy(HashMap *map);
 void hashmap_grow_capacity(HashMap *map, u32 factor);
 
-CB_API void hashmap_put(HashMap *map, const char *string, void *value);
+CB_API void hashmap_put(HashMap *map, const char *string, u32 element_size, void *value);
 CB_API void *hashmap_get(HashMap *map, const char *string);
+
+// must free removed element before use.
 CB_API void *hashmap_remove(HashMap *map, const char *string);
+
 CB_API b8 hashmap_has(HashMap *map, const char *string);
 
 #endif

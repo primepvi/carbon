@@ -30,6 +30,7 @@ void hashmap_destroy(HashMap *map) {
     HashMapEntry *entry = &map->entries[i];
     if (entry->state == HASHMAP_ENTRY_OCCUPIED) {
       free(entry->key);
+      free(entry->value);
     }
   }
 
@@ -37,7 +38,7 @@ void hashmap_destroy(HashMap *map) {
   free(map);
 }
 
-void hashmap_put(HashMap *map, const char *key, void *value) {
+void hashmap_put(HashMap *map, const char *key, u32 element_size, void *value) {
   if (map->entries_len >= map->entries_capacity) {
     hashmap_grow_capacity(map, 2);
   }
@@ -53,7 +54,8 @@ void hashmap_put(HashMap *map, const char *key, void *value) {
         entry->state == HASHMAP_ENTRY_REMOVED) {
       entry->state = HASHMAP_ENTRY_OCCUPIED;
       entry->key = strdup(key);
-      entry->value = value;
+      entry->value = malloc(element_size);
+      memcpy(entry->value, value, element_size);
       map->entries_len++;
       return;
     }
@@ -61,7 +63,7 @@ void hashmap_put(HashMap *map, const char *key, void *value) {
     // update
     if (entry->state == HASHMAP_ENTRY_OCCUPIED &&
         strcmp(entry->key, key) == 0) {
-      entry->value = value;
+      memcpy(entry->value, value, element_size);
       return;
     }
 

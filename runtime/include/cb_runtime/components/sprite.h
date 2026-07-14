@@ -5,8 +5,10 @@
 #include <cb_engine/math/vec2.h>
 #include <cb_engine/math/color.h>
 
+#include <cb_runtime/components/component.h>
+
 typedef struct {
-  Texture *texture;
+  TextureHandle texture_handle;
   Color color;
   
   Vec2 position;
@@ -15,7 +17,7 @@ typedef struct {
   b8 flip_x, flip_y;
 } Sprite;
 
-Sprite sprite_with_texture(Texture *texture, Vec2 position, Vec2 scale);
+Sprite sprite_with_texture(TextureHandle texture_handle, Vec2 position, Vec2 scale);
 Sprite sprite_with_color(Color color, Vec2 position, Vec2 scale);
 
 void sprite_move(Sprite *sprite, Vec2 delta);

@@ -7,10 +7,15 @@
 
 typedef enum {
   COMPONENT_INVALID = -1,
+  COMPONENT_TEXTURE,
   COMPONENT_SPRITE,
+  COMPONENT_SCRIPT,
 } ComponentKind;
 
 typedef i32 ComponentHandle;
+typedef i32 TextureHandle;
+typedef i32 ScriptHandle;
+typedef i32 SpriteHandle;
 
 typedef struct {
   ComponentKind kind;
