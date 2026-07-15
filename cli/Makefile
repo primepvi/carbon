@@ -2,7 +2,7 @@ CC = clang
 CFLAGS = -Wall -Wextra -g -I../engine/include/ -I../engine/external/glad/include -I../engine/external/stb/include -I../runtime/include -I../runtime/external/cJSON/include
 LDFLAGS = -L../engine -L../runtime -llua -lEGL -lcarbon -Wl,-rpath,'$$ORIGIN/../engine' -lrcarbon -Wl,-rpath,'$$ORIGIN/../runtime'
 
-SRCS = $(shell find src -name "*.c")
+SRCS = $(shell find src -name "*.c") ../runtime/external/cJSON/src/cJSON.c
 OBJS = $(patsubst src/%.c,build/%.o,$(SRCS))
 BIN = cli
 
