@@ -1,5 +1,6 @@
 #include <cb_runtime/bindings/lua_bindings.h>
 #include <cb_runtime/bindings/lua_input.h>
+#include <cb_runtime/bindings/lua_vec2.h>
 
 void lua_bind_enum(lua_State *L, const char *name, const LuaEnumValue *values) {
   lua_newtable(L);
@@ -12,4 +13,7 @@ void lua_bind_enum(lua_State *L, const char *name, const LuaEnumValue *values) {
   lua_setglobal(L, name);
 }
 
-void lua_bind(lua_State *L) { lua_input_bind(L); }
+void lua_bind(lua_State *L) {
+  lua_input_bind(L);
+  lua_vec2_bind(L);
+}

@@ -10,7 +10,10 @@ Script script_new(const char *path, lua_State *lua_vm) {
   script.ref = CB_INVALID_LUA_SCRIPT_REF;
 
   if (luaL_dofile(lua_vm, path) != LUA_OK) {
-    CB_ERROR("Cannot load script at path %s.", path);
+    const char *error = lua_tostring(lua_vm, -1);
+    CB_ERROR("Cannot load script at path %s.\n Error: %s", path, error);
+    lua_pop(lua_vm, 1);
+    
     return script;
   }
 
