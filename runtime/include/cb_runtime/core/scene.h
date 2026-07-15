@@ -16,16 +16,18 @@ typedef struct {
   ArrayList *nodes;
 } Scene;
 
-Scene *scene_new(const char *name);
-void scene_destroy(Scene *scene);
+CB_API Scene *scene_new(const char *name);
+CB_API Scene *scene_from_json(Assets *assets, const char *path);
 
-void scene_draw(Scene *scene, Renderer *renderer);
-void scene_update(Scene *scene);
+CB_API void scene_destroy(Scene *scene);
 
-NodeHandle scene_find_node(Scene *scene, const char *name);
-NodeHandle scene_node_create(Scene *scene, const char *name);
-NodeHandle scene_node_find_child(Scene *scene, NodeHandle parent_handle, const char *name);
-void scene_node_attach_component(Scene *scene, NodeHandle node_handle,
+CB_API void scene_draw(Scene *scene, Renderer *renderer);
+CB_API void scene_update(Scene *scene);
+
+CB_API NodeHandle scene_find_node(Scene *scene, const char *name);
+CB_API NodeHandle scene_node_create(Scene *scene, const char *name);
+CB_API NodeHandle scene_node_find_child(Scene *scene, NodeHandle parent_handle, const char *name);
+CB_API void scene_node_attach_component(Scene *scene, NodeHandle node_handle,
                                  Component component);
 
 

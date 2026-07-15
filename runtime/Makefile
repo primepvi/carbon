@@ -1,9 +1,10 @@
 CC = clang
-CFLAGS = -Wall -Wextra -g -Iinclude -I../engine/include/ -I../engine/external/glad/include -I../engine/external/stb/include
-LDFLAGS = -L../engine -llua -lEGL -lcarbon -Wl,-rpath,'$$ORIGIN/../engine'
-SRCS = $(shell find src -name "*.c")
+CFLAGS = -Wall -Wextra -g -fPIC -Iinclude -I../engine/include/ -I../engine/external/glad/include -I../engine/external/stb/include -Iexternal/cJSON/include
+LDFLAGS = -shared -fvisibility=hidden -L../engine -llua -lEGL -lcarbon -Wl,-rpath,'$$ORIGIN/../engine'
+
+SRCS = $(shell find src -name "*.c") external/cJSON/src/cJSON.c
 OBJS = $(patsubst src/%.c,build/%.o,$(SRCS))
-BIN = runtime
+BIN = librcarbon.so
 
 .PHONY: all clean
 

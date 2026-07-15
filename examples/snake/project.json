@@ -1,0 +1,4 @@
+{
+    "name": "snake",
+    "scene": "examples/snake/scenes/game.json"
+}

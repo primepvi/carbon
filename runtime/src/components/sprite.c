@@ -1,38 +1,13 @@
 #include "cb_runtime/components/component.h"
 #include <cb_runtime/components/sprite.h>
-#include <stdlib.h>
 
-Sprite sprite_with_texture(TextureHandle texture_handle, Vec2 position, Vec2 scale) {
-  Sprite sprite = {0};
-  sprite.texture_handle = texture_handle;
-  sprite.position = position;
-  sprite.scale = scale;
-
-  sprite.flip_x = false;
-  sprite.flip_y = false;
-
-  return sprite;
-}
-
-Sprite sprite_with_color(Color color, Vec2 position, Vec2 scale) {
-  Sprite sprite = {0};
-  sprite.texture_handle = CB_INVALID_HANDLE;
-  sprite.color = color;
-  sprite.position = position;
-  sprite.scale = scale;
-
-  sprite.flip_x = false;
-  sprite.flip_y = false;
-
-  return sprite;
-}
-
-void sprite_move(Sprite *sprite, Vec2 delta) {
-  sprite->position = vec2_add(sprite->position, delta);
-}
-
-void sprite_scale(Sprite *sprite, f32 scalar) {
-  sprite->scale = vec2_scale(sprite->scale, scalar);
+Sprite sprite_create(ComponentHandle texture_handle, Color color, b8 flip_x, b8 flip_y) {
+  return (Sprite){
+      .texture_handle = texture_handle,
+      .color = color,
+      .flip_x = flip_x,
+      .flip_y = flip_y,
+  };
 }
 
 void sprite_flip_horizontal(Sprite *sprite) {
@@ -42,5 +17,5 @@ void sprite_flip_horizontal(Sprite *sprite) {
 void sprite_flip_vertical(Sprite *sprite) { sprite->flip_y = !sprite->flip_y; }
 
 b8 sprite_component_kind_comparator(void *current) {
-  return ((Component*)current)->kind == COMPONENT_SPRITE;
+  return ((Component *)current)->kind == COMPONENT_SPRITE;
 };

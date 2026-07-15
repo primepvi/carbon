@@ -3,8 +3,35 @@
 #include <cb_runtime/core/runtime.h>
 #include <cb_runtime/core/scene.h>
 
+#include <cJSON.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+static const char *read_scene_json_file(const char *path) {
+  FILE *file = fopen(path, "rb");
+  if (file == NULL) {
+    CB_ERROR("Cannot open scene file at: '%s'", path);
+    return NULL;
+  }
+
+  fseek(file, 0, SEEK_END);
+  u32 len = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  char *buffer = malloc(len + 1);
+  if (buffer == NULL) {
+    CB_ERROR("Cannot allocate buffer to read scene source.");
+    return NULL;
+  }
+
+  fread(buffer, 1, len, file);
+  fclose(file);
+
+  buffer[len] = '\0';
+
+  return buffer;
+}
 
 Scene *scene_new(const char *name) {
   Scene *scene = malloc(sizeof(Scene));
@@ -12,6 +39,92 @@ Scene *scene_new(const char *name) {
   scene->nodes = array_list_new(32, sizeof(Node));
   scene->root = node_new(SCENE_ROOT_NODE_HANDLE, "Root");
   array_list_push(scene->nodes, scene->root);
+
+  return scene;
+}
+
+Scene *scene_from_json(Assets *assets, const char *path) {
+  const char *source = read_scene_json_file(path);
+  cJSON *json = cJSON_Parse(source);
+
+  cJSON *scene_name = cJSON_GetObjectItem(json, "name");
+  cJSON *scene_nodes = cJSON_GetObjectItem(json, "nodes");
+
+  Scene *scene = scene_new(scene_name->valuestring);
+  CB_INFO("Loading scene %s...", scene_name->valuestring);
+
+  for (i32 i = 0; i < cJSON_GetArraySize(scene_nodes); i++) {
+    cJSON *node = cJSON_GetArrayItem(scene_nodes, i);
+    cJSON *node_name = cJSON_GetObjectItem(node, "name");
+    cJSON *node_components = cJSON_GetObjectItem(node, "components");
+
+    NodeHandle node_handle = scene_node_create(scene, node_name->valuestring);
+    CB_INFO("Loading node %s...", node_name->valuestring);
+
+    for (i32 j = 0; j < cJSON_GetArraySize(node_components); j++) {
+      cJSON *node_component = cJSON_GetArrayItem(node_components, j);
+      cJSON *node_component_kind = cJSON_GetObjectItem(node_component, "kind");
+
+      if (strcmp(node_component_kind->valuestring, "Transform") == 0) {
+        cJSON *transform_name = cJSON_GetObjectItem(node_component, "name");
+        cJSON *transform_position =
+            cJSON_GetObjectItem(node_component, "position");
+        cJSON *transform_scale = cJSON_GetObjectItem(node_component, "scale");
+
+        f32 pos_x = cJSON_GetArrayItem(transform_position, 0)->valuedouble;
+        f32 pos_y = cJSON_GetArrayItem(transform_position, 1)->valuedouble;
+        Vec2 position = VEC2(pos_x, pos_y);
+
+        f32 scale_x = cJSON_GetArrayItem(transform_scale, 0)->valuedouble;
+        f32 scale_y = cJSON_GetArrayItem(transform_scale, 1)->valuedouble;
+        Vec2 scale = VEC2(scale_x, scale_y);
+
+        Transform transform = transform_create(position, scale);
+        Component transform_component = assets_load_transform(
+            assets, transform, transform_name->valuestring);
+        scene_node_attach_component(scene, node_handle, transform_component);
+
+        CB_INFO("Node %s transform component %s has been loaded.",
+                node_name->valuestring, transform_name->valuestring);
+      } else if (strcmp(node_component_kind->valuestring, "Sprite") == 0) {
+        cJSON *sprite_name = cJSON_GetObjectItem(node_component, "name");
+        cJSON *sprite_texture = cJSON_GetObjectItem(node_component, "texture");
+        cJSON *sprite_color = cJSON_GetObjectItem(node_component, "color");
+        cJSON *sprite_flip = cJSON_GetObjectItem(node_component, "flip");
+
+        f32 color_r = cJSON_GetArrayItem(sprite_color, 0)->valuedouble;
+        f32 color_g = cJSON_GetArrayItem(sprite_color, 1)->valuedouble;
+        f32 color_b = cJSON_GetArrayItem(sprite_color, 2)->valuedouble;
+        f32 color_a = cJSON_GetArrayItem(sprite_color, 3)->valuedouble;
+        Color color = RGBA(color_r, color_g, color_b, color_a);
+
+        b8 flip_x = cJSON_GetArrayItem(sprite_flip, 0)->valueint;
+        b8 flip_y = cJSON_GetArrayItem(sprite_flip, 1)->valueint;
+
+        ComponentHandle texture_handle = assets_get_component_handle(
+            assets, COMPONENT_TEXTURE, sprite_texture->valuestring);
+        Component texture_component = assets_load_sprite(
+            assets, sprite_create(texture_handle, color, flip_x, flip_y),
+            sprite_name->valuestring);
+        scene_node_attach_component(scene, node_handle, texture_component);
+
+        CB_INFO("Node %s sprite component %s has been loaded.",
+                node_name->valuestring, sprite_name->valuestring);
+      } else if (strcmp(node_component_kind->valuestring, "Script") == 0) {
+        cJSON *script_name = cJSON_GetObjectItem(node_component, "name");
+        cJSON *script_path = cJSON_GetObjectItem(node_component, "path");
+
+        Component script_component = assets_load_script(
+            assets, script_path->valuestring, script_name->valuestring);
+        scene_node_attach_component(scene, node_handle, script_component);
+
+        CB_INFO("Node %s script component %s has been loaded.",
+                node_name->valuestring, script_name->valuestring);
+      }
+
+      CB_INFO("Node %s has been loaded.", node_name->valuestring);
+    }
+  }
 
   return scene;
 }
@@ -97,6 +210,11 @@ void scene_draw(Scene *scene, Renderer *renderer) {
     if (sprite_component == NULL)
       continue;
 
+    Component *transform_component = array_list_find(
+        curr_node->components, transform_component_kind_comparator);
+    if (transform_component == NULL)
+      continue;
+
     Assets *assets = runtime_get_assets();
     Sprite *sprite = assets_get_sprite(assets, sprite_component->handle);
     if (sprite == NULL) {
@@ -105,13 +223,18 @@ void scene_draw(Scene *scene, Renderer *renderer) {
       continue;
     }
 
-    if (sprite->texture_handle == CB_INVALID_HANDLE) {
-      renderer_draw_quad(renderer, sprite->position, sprite->scale,
-                         sprite->color);
-    } else {
-      Texture *texture = assets_get_texture(assets, sprite->texture_handle);
-      renderer_draw_texture(renderer, sprite->position, sprite->scale, texture);
+    Transform *transform =
+        assets_get_transform(assets, transform_component->handle);
+    if (sprite == NULL) {
+      CB_ERROR(
+          "Cannot find transform with handle %d of node %s during %s draw.",
+          transform_component->handle, curr_node->name, scene->name);
+      continue;
     }
+
+    Texture *texture = assets_get_texture(assets, sprite->texture_handle);
+    renderer_draw_texture(renderer, transform->position, transform->scale,
+                          texture, sprite->color);
   }
 }
 

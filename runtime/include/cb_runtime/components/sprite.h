@@ -8,23 +8,15 @@
 #include <cb_runtime/components/component.h>
 
 typedef struct {
-  TextureHandle texture_handle;
+  ComponentHandle texture_handle;
   Color color;
-  
-  Vec2 position;
-  Vec2 scale;
-
   b8 flip_x, flip_y;
 } Sprite;
 
-Sprite sprite_with_texture(TextureHandle texture_handle, Vec2 position, Vec2 scale);
-Sprite sprite_with_color(Color color, Vec2 position, Vec2 scale);
+CB_API Sprite sprite_create(ComponentHandle texture_handle, Color color, b8 flip_x, b8 flip_y);
 
-void sprite_move(Sprite *sprite, Vec2 delta);
-void sprite_scale(Sprite *sprite, f32 scalar);
-
-void sprite_flip_horizontal(Sprite *sprite);
-void sprite_flip_vertical(Sprite *sprite);
+CB_API void sprite_flip_horizontal(Sprite *sprite);
+CB_API void sprite_flip_vertical(Sprite *sprite);
 
 b8 sprite_component_kind_comparator(void *current);
 

@@ -10,14 +10,18 @@ struct {
   lua_State *lua_vm;
 } _state;
 
-void runtime_init(Application *app, const char *scene_name) {
+void runtime_init(Application *app) {
   _state.app = app;
   _state.assets = assets_new();
-  _state.scene = scene_new(scene_name);
+  _state.scene = NULL;
   _state.lua_vm = luaL_newstate();
 
   luaL_openlibs(_state.lua_vm);
   lua_bind(_state.lua_vm);
+}
+
+void runtime_set_scene(Scene *scene) {
+  _state.scene = scene;
 }
 
 void runtime_run(void) {

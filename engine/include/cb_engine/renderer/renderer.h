@@ -49,9 +49,7 @@ b8 renderer_should_flush(Renderer *renderer);
 
 CB_API void renderer_prepare(Renderer *renderer);
 CB_API void renderer_flush(Renderer *renderer);
-CB_API void renderer_draw_quad(Renderer *renderer, Vec2 position, Vec2 size,
-                               Color color);
 CB_API void renderer_draw_texture(Renderer *renderer, Vec2 position, Vec2 size,
-                                 Texture *texture);
+				  Texture *texture, Color color);
 
 #endif

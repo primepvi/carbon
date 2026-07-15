@@ -1,0 +1,21 @@
+{
+    "name": "game",
+    "nodes": [
+      {
+          "name": "Player",
+          "components": [
+              { "kind": "Transform", "name": "Player/Transform", "position": [100, 100], "scale": [100, 100] },
+              { "kind": "Sprite", "name": "Player/Sprite", "texture": "internal/1x1", "color": [0.0, 1.0, 0.0, 1.0], "flip": [false, false] },
+              { "kind": "Script", "name": "Player/Script", "path": "examples/snake/scripts/player.lua" }
+          ]
+      },
+      {
+          "name": "Apple",
+          "components": [
+              { "kind": "Transform", "name": "Apple/Transform", "position": [50, 50], "scale": [25, 25] },
+              { "kind": "Sprite", "name": "Apple/Sprite", "texture": "internal/1x1", "color": [1.0, 0.0, 0.0, 1.0], "flip": [false, false] },
+              { "kind": "Script", "name": "Apple/Script", "path": "examples/snake/scripts/apple.lua" }
+          ]
+      }
+    ]
+}

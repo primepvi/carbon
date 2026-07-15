@@ -1,7 +1,8 @@
 # build files
 build/
-runtime/runtime
+runtime/librcarbon.so
 engine/libcarbon.so
+cli/cli
 
 # clangd
 .cache/

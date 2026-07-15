@@ -14,6 +14,14 @@ Assets *assets_new(void) {
   assets->sprites = array_list_new(128, sizeof(Sprite));
   assets->sprites_handles = hashmap_new(128);
 
+  assets->transforms = array_list_new(128, sizeof(Transform));
+  assets->transforms_handles = hashmap_new(128);
+
+  Texture tex = texture_white_1x1();
+  ComponentHandle tex_handle = array_list_push(assets->textures, &tex);
+  hashmap_put(assets->textures_handles, "internal/1x1", sizeof(ComponentHandle),
+              &tex_handle);
+
   return assets;
 }
 
@@ -73,6 +81,17 @@ Component assets_load_sprite(Assets *assets, Sprite sprite, const char *name) {
   return sprite_component;
 }
 
+Component assets_load_transform(Assets *assets, Transform transform,
+                                const char *name) {
+  ComponentHandle transform_handle =
+      array_list_push(assets->transforms, &transform);
+  Component transform_component = {COMPONENT_TRANSFORM, transform_handle};
+  hashmap_put(assets->transforms_handles, name, sizeof(ComponentHandle),
+              &transform_handle);
+
+  return transform_component;
+}
+
 Texture *assets_get_texture(Assets *assets, ComponentHandle handle) {
   return array_list_at(assets->textures, handle);
 }
@@ -83,6 +102,10 @@ Script *assets_get_script(Assets *assets, ComponentHandle handle) {
 
 Sprite *assets_get_sprite(Assets *assets, ComponentHandle handle) {
   return array_list_at(assets->sprites, handle);
+}
+
+Transform *assets_get_transform(Assets *assets, ComponentHandle handle) {
+  return array_list_at(assets->transforms, handle);
 }
 
 ComponentHandle assets_get_component_handle(Assets *assets, ComponentKind kind,
@@ -99,6 +122,9 @@ ComponentHandle assets_get_component_handle(Assets *assets, ComponentKind kind,
   case COMPONENT_SPRITE:
     handle = hashmap_get(assets->sprites_handles, name);
     break;
+  case COMPONENT_TRANSFORM:
+    handle = hashmap_get(assets->transforms_handles, name);
+    break;
   default:
     handle = NULL;
   }
@@ -107,21 +133,5 @@ ComponentHandle assets_get_component_handle(Assets *assets, ComponentKind kind,
 }
 
 b8 assets_has_component(Assets *assets, ComponentKind kind, const char *name) {
-  ComponentHandle *handle;
-
-  switch (kind) {
-  case COMPONENT_TEXTURE:
-    handle = hashmap_get(assets->textures_handles, name);
-    break;
-  case COMPONENT_SCRIPT:
-    handle = hashmap_get(assets->scripts_handles, name);
-    break;
-  case COMPONENT_SPRITE:
-    handle = hashmap_get(assets->sprites_handles, name);
-    break;
-  default:
-    handle = NULL;
-  }
-
-  return handle == NULL ? false : true;
+  return assets_get_component_handle(assets, kind, name) != CB_INVALID_HANDLE;
 }
