@@ -1,3 +1,5 @@
+#include <cb_runtime/components/sprite.h>
+#include <cb_runtime/components/transform.h>
 #include <cb_runtime/components/component.h>
 #include <cb_runtime/core/node.h>
 
@@ -33,4 +35,21 @@ void node_push_children(Node *node, NodeHandle children) {
 
 void node_push_component(Node *node, Component component) {
   array_list_push(node->components, &component);
+}
+
+ComponentHandle node_find_component(Node *node, ComponentKind kind) {
+  ArrayListSingleParamComparatorFn comparator;
+  switch (kind) {
+  case COMPONENT_SPRITE:
+    comparator = sprite_component_kind_comparator;
+    break;
+  case COMPONENT_TRANSFORM:
+    comparator = transform_component_kind_comparator;
+    break;
+  default:
+    return CB_INVALID_HANDLE;
+  }
+
+  Component *component = array_list_find(node->components, comparator);
+  return component == NULL ? CB_INVALID_HANDLE : component->handle;
 }

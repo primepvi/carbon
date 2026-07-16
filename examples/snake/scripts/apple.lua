@@ -1,11 +1,11 @@
 -- scripts/apple.lua
 local Apple = {}
 
-function Apple.update(deltaTime)
+function Apple:Update(deltaTime)
    -- code here
 end
 
-function Apple.draw()
+function Apple:Draw()
    -- code here
 end
 

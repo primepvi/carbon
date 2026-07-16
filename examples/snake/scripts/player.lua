@@ -1,30 +1,32 @@
 -- scripts/player.lua
 local Player = {}
 
-function Player.update(deltaTime)
-   local movement = Vec2.zero;
-
+function Player:Update(deltaTime)
+  local movement = Vec2.new(0, 0)
+   
   if Input.KeyDown(Keys.W) then
-    movement.y = movement.y - 1.0;    
+    movement.y = movement.y - 1.0
   end
 
   if Input.KeyDown(Keys.S) then
-    movement.y = movement.y + 1.0;
+    movement.y = movement.y + 1.0
   end
 
   if Input.KeyDown(Keys.A) then
-    movement.x = movement.x - 1.0;
+    movement.x = movement.x - 1.0
   end
 
   if Input.KeyDown(Keys.D) then
-    movement.x = movement.x + 1.0;
+    movement.x = movement.x + 1.0
   end
 
-  movement = Vec2.scale(Vec2.normalize(movement), 200 * deltaTime);
-  print("x: " .. movement.x .. ", y: " .. movement.y);
+  movement = Vec2.scale(movement:normalize(), 200 * deltaTime)
+
+  local transform = self.Node:FindComponent("Transform")
+  transform.position = transform.position:add(movement)
 end
 
-function Player.draw()
+function Player:Draw()
    -- code here
 end
 

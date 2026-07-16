@@ -434,6 +434,7 @@ void platform_window_pool_events(Platform *platform) {
       if (atom == descriptor->wm_delete) {
         platform_window_close(platform);
       }
+      break;
     }
     case ConfigureNotify: {
       u32 width = event.xconfigure.width;

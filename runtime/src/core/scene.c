@@ -1,3 +1,4 @@
+#include "cb_runtime/bindings/lua_node.h"
 #include <cb_engine/core/logger.h>
 #include <cb_runtime/components/sprite.h>
 #include <cb_runtime/core/runtime.h>
@@ -169,16 +170,20 @@ void scene_update(Scene *scene) {
 
     lua_State *L = runtime_get_luavm();
     lua_rawgeti(L, LUA_REGISTRYINDEX, script->ref);
-    lua_getfield(L, -1, "update");
+    lua_getfield(L, -1, "Update");
 
     if (!lua_isfunction(L, -1)) {
       lua_pop(L, 2);
       CB_DEBUG("Script in %s dont have an update function.", script->path);
       continue;
     }
-
+    
+    lua_newtable(L);
+    lua_push_node(L, curr_node);
+    lua_setfield(L, -2, "Node");
     lua_pushnumber(L, application_delta_time(app));
-    if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+    
+    if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
       const char *error = lua_tostring(L, -1);
       CB_ERROR("Lua Error\n Script Path: %s\n Error: %s", script->path, error);
       lua_pop(L, 1);
@@ -236,6 +241,11 @@ void scene_draw(Scene *scene, Renderer *renderer) {
     renderer_draw_texture(renderer, transform->position, transform->scale,
                           texture, sprite->color);
   }
+}
+
+Node *scene_get_node(Scene *scene, NodeHandle handle) {
+  return handle == CB_INVALID_HANDLE ? NULL
+                                     : array_list_at(scene->nodes, handle);
 }
 
 NodeHandle scene_find_node(Scene *scene, const char *name) {

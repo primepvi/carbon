@@ -23,4 +23,6 @@ void node_destroy(Node *node);
 void node_push_children(Node *node, NodeHandle children);
 void node_push_component(Node *node, Component component);
 
+ComponentHandle node_find_component(Node *node, ComponentKind kind);
+
 #endif
