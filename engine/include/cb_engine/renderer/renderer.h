@@ -10,6 +10,8 @@
 #include "../math/color.h"
 #include "../math/vec2.h"
 
+#include "../platform/platform.h"
+
 #include "../types.h"
 
 #define RENDERER_BATCH_MAX_VERTICES 128
@@ -40,12 +42,18 @@ typedef struct {
 typedef struct {
   RendererBatch *batch;
   Shader shader;
+  
+  Mat4 projection;
+  Mat4 view;
 } Renderer;
 
-CB_API Renderer *renderer_new(Shader shader);
+CB_API Renderer *renderer_new(Shader shader, Platform *platform);
 CB_API void renderer_destroy(Renderer *renderer);
 
 b8 renderer_should_flush(Renderer *renderer);
+
+CB_API void renderer_set_projection(Renderer *renderer, Mat4 projection);
+CB_API void renderer_set_view(Renderer *renderer, Mat4 view);
 
 CB_API void renderer_prepare(Renderer *renderer);
 CB_API void renderer_flush(Renderer *renderer);

@@ -34,24 +34,32 @@ static const char *read_scene_json_file(const char *path) {
   return buffer;
 }
 
-Scene *scene_new(const char *name) {
+Scene *scene_new(const char *name, Camera camera) {
   Scene *scene = malloc(sizeof(Scene));
   scene->name = strdup(name);
   scene->nodes = array_list_new(32, sizeof(Node));
   scene->root = node_new(SCENE_ROOT_NODE_HANDLE, "Root");
   array_list_push(scene->nodes, scene->root);
 
+  scene->camera = camera;
+
   return scene;
 }
 
-Scene *scene_from_json(Assets *assets, const char *path) {
+void scene_destroy(Scene *scene) {
+  free(scene->name);
+  node_destroy(scene->root);
+  array_list_destroy(scene->nodes);
+}
+
+Scene *scene_from_json(Assets *assets, Camera camera, const char *path) {
   const char *source = read_scene_json_file(path);
   cJSON *json = cJSON_Parse(source);
 
   cJSON *scene_name = cJSON_GetObjectItem(json, "name");
   cJSON *scene_nodes = cJSON_GetObjectItem(json, "nodes");
 
-  Scene *scene = scene_new(scene_name->valuestring);
+  Scene *scene = scene_new(scene_name->valuestring, camera);
   CB_INFO("Loading scene %s...", scene_name->valuestring);
 
   for (i32 i = 0; i < cJSON_GetArraySize(scene_nodes); i++) {
@@ -121,6 +129,23 @@ Scene *scene_from_json(Assets *assets, const char *path) {
 
         CB_INFO("Node %s script component %s has been loaded.",
                 node_name->valuestring, script_name->valuestring);
+      } else if (strcmp(node_component_kind->valuestring, "Collider") == 0) {
+        cJSON *collider_name = cJSON_GetObjectItem(node_component, "name");
+        cJSON *collider_size = cJSON_GetObjectItem(node_component, "scale");
+        cJSON *collider_is_trigger =
+            cJSON_GetObjectItem(node_component, "isTrigger");
+
+        f32 size_x = cJSON_GetArrayItem(collider_size, 0)->valuedouble;
+        f32 size_y = cJSON_GetArrayItem(collider_size, 1)->valuedouble;
+        Vec2 size = VEC2(size_x, size_y);
+
+        Component collider_component = assets_load_collider(
+            assets, collider_create(size, collider_is_trigger->valueint),
+            collider_name->valuestring);
+        scene_node_attach_component(scene, node_handle, collider_component);
+
+        CB_INFO("Node %s collider component %s has been loaded.",
+                node_name->valuestring, collider_name->valuestring);
       }
 
       CB_INFO("Node %s has been loaded.", node_name->valuestring);
@@ -128,12 +153,6 @@ Scene *scene_from_json(Assets *assets, const char *path) {
   }
 
   return scene;
-}
-
-void scene_destroy(Scene *scene) {
-  free(scene->name);
-  node_destroy(scene->root);
-  array_list_destroy(scene->nodes);
 }
 
 void scene_update(Scene *scene) {
@@ -177,12 +196,12 @@ void scene_update(Scene *scene) {
       CB_DEBUG("Script in %s dont have an update function.", script->path);
       continue;
     }
-    
+
     lua_newtable(L);
     lua_push_node(L, curr_node);
     lua_setfield(L, -2, "Node");
     lua_pushnumber(L, application_delta_time(app));
-    
+
     if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
       const char *error = lua_tostring(L, -1);
       CB_ERROR("Lua Error\n Script Path: %s\n Error: %s", script->path, error);
@@ -193,8 +212,63 @@ void scene_update(Scene *scene) {
   }
 }
 
+void scene_physics_update(Scene *scene) {
+  ArrayList *handles = scene->root->childrens;
+
+  for (u32 i = 0; i < array_list_length(handles); i++) {
+    NodeHandle curr_handle = *(NodeHandle *)array_list_at(handles, i);
+    if (curr_handle == CB_INVALID_HANDLE) {
+      CB_ERROR("Invalid node handle found during %s physics update.",
+               scene->name);
+      continue;
+    }
+
+    Node *curr_node = array_list_at(scene->nodes, curr_handle);
+    if (curr_node == NULL) {
+      CB_ERROR("Cannot find node with handle %d during %s physics update.",
+               curr_handle, scene->name);
+      continue;
+    }
+
+    Component *transform_component = array_list_find(
+        curr_node->components, transform_component_kind_comparator);
+    if (transform_component == NULL)
+      continue;
+
+    Assets *assets = runtime_get_assets();
+
+    Transform *transform =
+        assets_get_transform(assets, transform_component->handle);
+    if (transform == NULL) {
+      CB_ERROR("Cannot find transform with handle %d of node %s during %s "
+               "physics update.",
+               transform_component->handle, curr_node->name, scene->name);
+      continue;
+    }
+
+    Component *collider_component = array_list_find(
+        curr_node->components, collider_component_kind_comparator);
+    if (collider_component == NULL)
+      continue;
+
+    Collider *collider =
+        assets_get_collider(assets, collider_component->handle);
+    if (collider == NULL) {
+      CB_ERROR("Cannot find collider with handle %d of node %s during %s "
+               "physics update.",
+               transform_component->handle, curr_node->name, scene->name);
+      continue;
+    }
+
+    Rect collider_bounds = collider_world_bounds(collider, transform->scale);
+  }
+}
+
 void scene_draw(Scene *scene, Renderer *renderer) {
   ArrayList *handles = scene->root->childrens;
+
+  renderer_set_projection(renderer, scene->camera.projection);
+  renderer_set_view(renderer, scene->camera.view);
 
   for (u32 i = 0; i < array_list_length(handles); i++) {
     NodeHandle curr_handle = *(NodeHandle *)array_list_at(handles, i);
@@ -230,7 +304,7 @@ void scene_draw(Scene *scene, Renderer *renderer) {
 
     Transform *transform =
         assets_get_transform(assets, transform_component->handle);
-    if (sprite == NULL) {
+    if (transform == NULL) {
       CB_ERROR(
           "Cannot find transform with handle %d of node %s during %s draw.",
           transform_component->handle, curr_node->name, scene->name);

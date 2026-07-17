@@ -58,8 +58,10 @@ int main(int argc, char **argv) {
   application_init(&app);
   runtime_init(&app);
 
+  Camera camera = camera_create(
+      VEC2(0, 0), VEC2(app_config.window_width, app_config.window_height));
   Scene *scene =
-      scene_from_json(runtime_get_assets(), project_scene->valuestring);
+      scene_from_json(runtime_get_assets(), camera, project_scene->valuestring);
   runtime_set_scene(scene);
 
   CB_INFO("Project %s has been loaded.", project_name->valuestring);

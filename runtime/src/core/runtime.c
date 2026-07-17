@@ -20,12 +20,15 @@ void runtime_init(Application *app) {
   lua_bind(_state.lua_vm);
 }
 
-void runtime_set_scene(Scene *scene) {
-  _state.scene = scene;
-}
+void runtime_set_scene(Scene *scene) { _state.scene = scene; }
 
 void runtime_run(void) {
+  Platform *platform = _state.app->platform;
+  Camera *camera = scene_get_camera(_state.scene);
+  camera_set_viewport(camera, VEC2(platform->width, platform->height));
+
   scene_update(_state.scene);
+  scene_physics_update(_state.scene);
   scene_draw(_state.scene, application_get_renderer(_state.app));
 }
 

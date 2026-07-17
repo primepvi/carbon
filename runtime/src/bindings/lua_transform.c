@@ -22,21 +22,22 @@ static i32 lua_transform_index(lua_State *L) {
 }
 
 static i32 lua_transform_new_index(lua_State *L) {
-  Transform **transform = luaL_checkudata(L, 1, "Transform");
+  Transform *transform = *(Transform **)luaL_checkudata(L, 1, "Transform");
   const char *key = luaL_checkstring(L, 2);
   Vec2 *value = luaL_checkudata(L, 3, "Vec2");
 
   if (strcmp(key, "position") == 0) {
-    (*transform)->position = *value;
+    transform->previous_position = transform->position;
+    transform->position = *value;
   } else if (strcmp(key, "scale") == 0) {
-    (*transform)->scale = *value;
+    transform->scale = *value;
   }
 
   return 0;
 }
 
 void lua_push_transform(lua_State *L, Transform *transform) {
-  Transform **transform_data = lua_newuserdatauv(L, sizeof(Transform*), 0);
+  Transform **transform_data = lua_newuserdatauv(L, sizeof(Transform *), 0);
   *transform_data = transform;
 
   luaL_getmetatable(L, "Transform");

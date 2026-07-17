@@ -23,7 +23,7 @@ function Player:Update(deltaTime)
   movement = Vec2.scale(movement:normalize(), 200 * deltaTime)
 
   local transform = self.Node:FindComponent("Transform")
-  transform.position = transform.position:add(movement)
+  transform.position = transform.position + movement
 end
 
 function Player:Draw()

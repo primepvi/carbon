@@ -6,7 +6,8 @@
           "components": [
               { "kind": "Transform", "name": "Player/Transform", "position": [100, 100], "scale": [100, 100] },
               { "kind": "Sprite", "name": "Player/Sprite", "texture": "internal/1x1", "color": [0.0, 1.0, 0.0, 1.0], "flip": [false, false] },
-              { "kind": "Script", "name": "Player/Script", "path": "examples/snake/scripts/player.lua" }
+              { "kind": "Script", "name": "Player/Script", "path": "examples/snake/scripts/player.lua" },
+	      { "kind": "Collider", "name": "Player/Collider", "size": [100, 100], "isTrigger": false }
           ]
       },
       {
@@ -14,7 +15,8 @@
           "components": [
               { "kind": "Transform", "name": "Apple/Transform", "position": [50, 50], "scale": [25, 25] },
               { "kind": "Sprite", "name": "Apple/Sprite", "texture": "internal/1x1", "color": [1.0, 0.0, 0.0, 1.0], "flip": [false, false] },
-              { "kind": "Script", "name": "Apple/Script", "path": "examples/snake/scripts/apple.lua" }
+              { "kind": "Script", "name": "Apple/Script", "path": "examples/snake/scripts/apple.lua" },
+	      { "kind": "Collider", "name": "Apple/Collider", "size": [25, 25], "isTrigger": false }
           ]
       }
     ]

@@ -58,7 +58,7 @@ void application_init(Application *application) {
   Shader shader =
       shader_from_files("assets/shaders/main.vert", "assets/shaders/main.frag");
 
-  application->renderer = renderer_new(shader);
+  application->renderer = renderer_new(shader, application->platform);
   application->running = true;
 
   CB_DEBUG("Application is now running.");

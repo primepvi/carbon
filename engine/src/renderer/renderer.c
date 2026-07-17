@@ -1,11 +1,11 @@
-#include <cb_engine/renderer/renderer.h>
 #include <cb_engine/core/logger.h>
+#include <cb_engine/renderer/renderer.h>
 
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-Renderer *renderer_new(Shader shader) {
+Renderer *renderer_new(Shader shader, Platform *platform) {
   RendererBatch *batch = calloc(1, sizeof(RendererBatch));
   batch->vbo = vbo_new(GL_DYNAMIC_DRAW);
   batch->ebo = ebo_new(GL_DYNAMIC_DRAW);
@@ -128,9 +128,8 @@ void renderer_flush(Renderer *renderer) {
   }
 
   shader_uniform_int_array(renderer->shader, "u_textures", 16, textures);
-  shader_uniform_mat4(renderer->shader, "u_proj", mat4_ortho(0, 800, 600, 0));
-  shader_uniform_mat4(renderer->shader, "u_view",
-                      mat4_view(VEC2(0.0f, 0.0f), 1.0f));
+  shader_uniform_mat4(renderer->shader, "u_proj", renderer->projection);
+  shader_uniform_mat4(renderer->shader, "u_view", renderer->view);
 
   vao_bind(batch->vao);
   glDrawElements(GL_TRIANGLES, batch->indices_count, GL_UNSIGNED_INT, NULL);
@@ -144,3 +143,10 @@ b8 renderer_should_flush(Renderer *renderer) {
          batch->vertices_count >= RENDERER_BATCH_MAX_VERTICES ||
          batch->indices_count >= RENDERER_BATCH_MAX_INDICES;
 }
+
+void renderer_set_view(Renderer *renderer, Mat4 view) { renderer->view = view; }
+void renderer_set_projection(Renderer *renderer, Mat4 projection) {
+  renderer->projection = projection;
+}
+
+

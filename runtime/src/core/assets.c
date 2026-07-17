@@ -6,21 +6,17 @@ Assets *assets_new(void) {
   Assets *assets = malloc(sizeof(Assets));
 
   assets->textures = array_list_new(128, sizeof(Texture));
-  assets->textures_handles = hashmap_new(128);
-
   assets->scripts = array_list_new(128, sizeof(Script));
-  assets->scripts_handles = hashmap_new(128);
-
   assets->sprites = array_list_new(128, sizeof(Sprite));
-  assets->sprites_handles = hashmap_new(128);
-
   assets->transforms = array_list_new(128, sizeof(Transform));
-  assets->transforms_handles = hashmap_new(128);
+  assets->colliders = array_list_new(128, sizeof(Collider));
+
+  assets->components = hashmap_new(128);
 
   Texture tex = texture_white_1x1();
   ComponentHandle tex_handle = array_list_push(assets->textures, &tex);
-  hashmap_put(assets->textures_handles, "internal/1x1", sizeof(ComponentHandle),
-              &tex_handle);
+  hashmap_put(assets->components, "internal/1x1", sizeof(Component),
+              &(Component){COMPONENT_TEXTURE, tex_handle});
 
   return assets;
 }
@@ -41,10 +37,9 @@ void assets_destroy(Assets *assets) {
   array_list_destroy(assets->textures);
   array_list_destroy(assets->scripts);
   array_list_destroy(assets->sprites);
-
-  hashmap_destroy(assets->textures_handles);
-  hashmap_destroy(assets->scripts_handles);
-  hashmap_destroy(assets->sprites_handles);
+  array_list_destroy(assets->transforms);
+  array_list_destroy(assets->colliders);
+  hashmap_destroy(assets->components);
 
   free(assets);
 }
@@ -55,8 +50,7 @@ Component assets_load_texture(Assets *assets, const char *path,
   Texture texture = texture_from_file(path, true);
   ComponentHandle texture_handle = array_list_push(assets->textures, &texture);
   Component texture_component = {COMPONENT_TEXTURE, texture_handle};
-  hashmap_put(assets->textures_handles, name, sizeof(ComponentHandle),
-              &texture_handle);
+  hashmap_put(assets->components, name, sizeof(Component), &texture_component);
 
   return texture_component;
 }
@@ -66,8 +60,7 @@ Component assets_load_script(Assets *assets, const char *path,
   Script script = script_new(path, runtime_get_luavm());
   ComponentHandle script_handle = array_list_push(assets->scripts, &script);
   Component script_component = {COMPONENT_SCRIPT, script_handle};
-  hashmap_put(assets->scripts_handles, name, sizeof(ComponentHandle),
-              &script_handle);
+  hashmap_put(assets->components, name, sizeof(Component), &script_component);
 
   return script_component;
 }
@@ -75,8 +68,7 @@ Component assets_load_script(Assets *assets, const char *path,
 Component assets_load_sprite(Assets *assets, Sprite sprite, const char *name) {
   ComponentHandle sprite_handle = array_list_push(assets->sprites, &sprite);
   Component sprite_component = {COMPONENT_SPRITE, sprite_handle};
-  hashmap_put(assets->sprites_handles, name, sizeof(ComponentHandle),
-              &sprite_handle);
+  hashmap_put(assets->components, name, sizeof(Component), &sprite_component);
 
   return sprite_component;
 }
@@ -86,10 +78,20 @@ Component assets_load_transform(Assets *assets, Transform transform,
   ComponentHandle transform_handle =
       array_list_push(assets->transforms, &transform);
   Component transform_component = {COMPONENT_TRANSFORM, transform_handle};
-  hashmap_put(assets->transforms_handles, name, sizeof(ComponentHandle),
-              &transform_handle);
+  hashmap_put(assets->components, name, sizeof(Component),
+              &transform_component);
 
   return transform_component;
+}
+
+Component assets_load_collider(Assets *assets, Collider collider,
+                               const char *name) {
+  ComponentHandle collider_handle =
+      array_list_push(assets->colliders, &collider);
+  Component collider_component = {COMPONENT_COLLIDER, collider_handle};
+  hashmap_put(assets->components, name, sizeof(Component), &collider_component);
+
+  return collider_component;
 }
 
 Texture *assets_get_texture(Assets *assets, ComponentHandle handle) {
@@ -110,26 +112,11 @@ Transform *assets_get_transform(Assets *assets, ComponentHandle handle) {
 
 ComponentHandle assets_get_component_handle(Assets *assets, ComponentKind kind,
                                             const char *name) {
-  ComponentHandle *handle;
+  Component *component = hashmap_get(assets->components, name);
+  if (component == NULL)
+    return CB_INVALID_HANDLE;
 
-  switch (kind) {
-  case COMPONENT_TEXTURE:
-    handle = hashmap_get(assets->textures_handles, name);
-    break;
-  case COMPONENT_SCRIPT:
-    handle = hashmap_get(assets->scripts_handles, name);
-    break;
-  case COMPONENT_SPRITE:
-    handle = hashmap_get(assets->sprites_handles, name);
-    break;
-  case COMPONENT_TRANSFORM:
-    handle = hashmap_get(assets->transforms_handles, name);
-    break;
-  default:
-    handle = NULL;
-  }
-
-  return handle == NULL ? CB_INVALID_HANDLE : *handle;
+  return component->kind == kind ? component->handle : CB_INVALID_HANDLE;
 }
 
 b8 assets_has_component(Assets *assets, ComponentKind kind, const char *name) {

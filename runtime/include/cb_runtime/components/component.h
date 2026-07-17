@@ -11,6 +11,7 @@ typedef enum {
   COMPONENT_TEXTURE,
   COMPONENT_SPRITE,
   COMPONENT_SCRIPT,
+  COMPONENT_COLLIDER
 } ComponentKind;
 
 typedef i32 ComponentHandle;

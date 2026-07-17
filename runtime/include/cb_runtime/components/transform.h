@@ -4,7 +4,7 @@
 #include <cb_engine/math/vec2.h>
 
 typedef struct {
-  Vec2 position;
+  Vec2 position, previous_position;
   Vec2 scale;
 } Transform;
 
