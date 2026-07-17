@@ -5,11 +5,11 @@ function Player:Update(deltaTime)
   local movement = Vec2.new(0, 0)
    
   if Input.KeyDown(Keys.W) then
-    movement.y = movement.y - 1.0
+    movement.y = movement.y + 1.0
   end
 
   if Input.KeyDown(Keys.S) then
-    movement.y = movement.y + 1.0
+    movement.y = movement.y - 1.0
   end
 
   if Input.KeyDown(Keys.A) then
@@ -26,8 +26,8 @@ function Player:Update(deltaTime)
   transform.position = transform.position + movement
 end
 
-function Player:Draw()
-   -- code here
+function Player:OnCollide(other)
+   print(other.name)
 end
 
 return Player

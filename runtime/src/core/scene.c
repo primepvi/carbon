@@ -52,6 +52,7 @@ void scene_destroy(Scene *scene) {
   array_list_destroy(scene->nodes);
 }
 
+// TODO: refactor this function with reflection module.
 Scene *scene_from_json(Assets *assets, Camera camera, const char *path) {
   const char *source = read_scene_json_file(path);
   cJSON *json = cJSON_Parse(source);
@@ -131,7 +132,7 @@ Scene *scene_from_json(Assets *assets, Camera camera, const char *path) {
                 node_name->valuestring, script_name->valuestring);
       } else if (strcmp(node_component_kind->valuestring, "Collider") == 0) {
         cJSON *collider_name = cJSON_GetObjectItem(node_component, "name");
-        cJSON *collider_size = cJSON_GetObjectItem(node_component, "scale");
+        cJSON *collider_size = cJSON_GetObjectItem(node_component, "size");
         cJSON *collider_is_trigger =
             cJSON_GetObjectItem(node_component, "isTrigger");
 
@@ -152,38 +153,68 @@ Scene *scene_from_json(Assets *assets, Camera camera, const char *path) {
     }
   }
 
+  cJSON_Delete(json);
   return scene;
 }
 
-void scene_update(Scene *scene) {
+ArrayList *scene_make_renderables(Scene *scene) {
   ArrayList *handles = scene->root->childrens;
+  ArrayList *renderables = array_list_new(64, sizeof(SceneRenderable));
+
+  Assets *assets = runtime_get_assets();
 
   for (u32 i = 0; i < array_list_length(handles); i++) {
     NodeHandle curr_handle = *(NodeHandle *)array_list_at(handles, i);
-    if (curr_handle == CB_INVALID_HANDLE) {
-      CB_ERROR("Invalid node handle found during %s update.", scene->name);
+    if (curr_handle == CB_INVALID_HANDLE)
       continue;
-    }
 
     Node *curr_node = array_list_at(scene->nodes, curr_handle);
-    if (curr_node == NULL) {
-      CB_ERROR("Cannot find node with handle %d during %s update.", curr_handle,
-               scene->name);
+    if (curr_node == NULL)
       continue;
-    }
 
     Component *script_component = array_list_find(
         curr_node->components, script_component_kind_comparator);
-    if (script_component == NULL)
-      continue;
-
-    Assets *assets = runtime_get_assets();
     Script *script = assets_get_script(assets, script_component->handle);
-    if (script == NULL) {
-      CB_ERROR("Cannot find script with handle %d of node %s during %s update.",
-               script_component->handle, curr_node->name, scene->name);
+
+    Component *sprite_component = array_list_find(
+        curr_node->components, sprite_component_kind_comparator);
+    Sprite *sprite = assets_get_sprite(assets, sprite_component->handle);
+
+    Component *transform_component = array_list_find(
+        curr_node->components, transform_component_kind_comparator);
+    Transform *transform =
+        assets_get_transform(assets, transform_component->handle);
+
+    Component *collider_component = array_list_find(
+        curr_node->components, collider_component_kind_comparator);
+    Collider *collider =
+        assets_get_collider(assets, collider_component->handle);
+
+    SceneRenderable renderable = {.node = curr_node,
+                                  .script = script,
+                                  .sprite = sprite,
+                                  .transform = transform,
+                                  .collider = collider};
+
+    array_list_push(renderables, &renderable);
+  }
+
+  return renderables;
+}
+
+void scene_update(Scene *scene, ArrayList *renderables) {
+  for (u32 i = 0; i < array_list_length(renderables); i++) {
+    SceneRenderable *renderable = array_list_at(renderables, i);
+    if (renderable == NULL) {
+      CB_ERROR("Invalid renderable found during %s update.", scene->name);
       continue;
     }
+
+    Node *node = renderable->node;
+    Script *script = renderable->script;
+
+    if (script == NULL)
+      continue;
 
     Application *app = runtime_get_application();
 
@@ -198,7 +229,7 @@ void scene_update(Scene *scene) {
     }
 
     lua_newtable(L);
-    lua_push_node(L, curr_node);
+    lua_push_node(L, node);
     lua_setfield(L, -2, "Node");
     lua_pushnumber(L, application_delta_time(app));
 
@@ -212,108 +243,92 @@ void scene_update(Scene *scene) {
   }
 }
 
-void scene_physics_update(Scene *scene) {
-  ArrayList *handles = scene->root->childrens;
-
-  for (u32 i = 0; i < array_list_length(handles); i++) {
-    NodeHandle curr_handle = *(NodeHandle *)array_list_at(handles, i);
-    if (curr_handle == CB_INVALID_HANDLE) {
-      CB_ERROR("Invalid node handle found during %s physics update.",
-               scene->name);
+void scene_physics_update(Scene *scene, ArrayList *renderables) {
+  for (u32 i = 0; i < array_list_length(renderables); i++) {
+    SceneRenderable *i_renderable = array_list_at(renderables, i);
+    if (i_renderable == NULL)
       continue;
+
+    Transform *i_transform = i_renderable->transform;
+    Collider *i_collider = i_renderable->collider;
+    Script *i_script = i_renderable->script;
+
+    if (i_transform == NULL || i_collider == NULL)
+      continue;
+
+    Rect i_bounds = collider_world_bounds(i_collider, i_transform->position);
+
+    for (u32 j = 0; j < array_list_length(renderables); j++) {
+      if (j == i)
+        continue;
+
+      SceneRenderable *j_renderable = array_list_at(renderables, j);
+      if (j_renderable == NULL)
+        continue;
+
+      Transform *j_transform = j_renderable->transform;
+      Collider *j_collider = j_renderable->collider;
+
+      if (j_transform == NULL || j_collider == NULL)
+        continue;
+
+      Rect j_bounds = collider_world_bounds(j_collider, j_transform->position);
+
+      if (rect_intersects(i_bounds, j_bounds) && i_script != NULL) {
+        lua_State *L = runtime_get_luavm();
+        lua_rawgeti(L, LUA_REGISTRYINDEX, i_script->ref);
+        lua_getfield(L, -1, "OnCollide");
+
+        if (!lua_isfunction(L, -1)) {
+          lua_pop(L, 2);
+          continue;
+        }
+
+        lua_newtable(L);
+        lua_push_node(L, i_renderable->node);
+        lua_setfield(L, -2, "Node");
+        lua_push_node(L, j_renderable->node);
+
+        if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
+          const char *error = lua_tostring(L, -1);
+          CB_ERROR("Lua Error\n Script Path: %s\n Error: %s", i_script->path,
+                   error);
+          lua_pop(L, 1);
+        }
+
+        lua_pop(L, 1);
+      }
     }
-
-    Node *curr_node = array_list_at(scene->nodes, curr_handle);
-    if (curr_node == NULL) {
-      CB_ERROR("Cannot find node with handle %d during %s physics update.",
-               curr_handle, scene->name);
-      continue;
-    }
-
-    Component *transform_component = array_list_find(
-        curr_node->components, transform_component_kind_comparator);
-    if (transform_component == NULL)
-      continue;
-
-    Assets *assets = runtime_get_assets();
-
-    Transform *transform =
-        assets_get_transform(assets, transform_component->handle);
-    if (transform == NULL) {
-      CB_ERROR("Cannot find transform with handle %d of node %s during %s "
-               "physics update.",
-               transform_component->handle, curr_node->name, scene->name);
-      continue;
-    }
-
-    Component *collider_component = array_list_find(
-        curr_node->components, collider_component_kind_comparator);
-    if (collider_component == NULL)
-      continue;
-
-    Collider *collider =
-        assets_get_collider(assets, collider_component->handle);
-    if (collider == NULL) {
-      CB_ERROR("Cannot find collider with handle %d of node %s during %s "
-               "physics update.",
-               transform_component->handle, curr_node->name, scene->name);
-      continue;
-    }
-
-    Rect collider_bounds = collider_world_bounds(collider, transform->scale);
   }
 }
 
-void scene_draw(Scene *scene, Renderer *renderer) {
-  ArrayList *handles = scene->root->childrens;
+void scene_draw(Scene *scene, Renderer *renderer, ArrayList *renderables) {
+  Assets *assets = runtime_get_assets();
 
   renderer_set_projection(renderer, scene->camera.projection);
   renderer_set_view(renderer, scene->camera.view);
 
-  for (u32 i = 0; i < array_list_length(handles); i++) {
-    NodeHandle curr_handle = *(NodeHandle *)array_list_at(handles, i);
-    if (curr_handle == CB_INVALID_HANDLE) {
-      CB_ERROR("Invalid node handle found during %s draw.", scene->name);
-      continue;
-    }
+  for (u32 i = 0; i < array_list_length(renderables); i++) {
+    SceneRenderable *renderable = array_list_at(renderables, i);
 
-    Node *curr_node = array_list_at(scene->nodes, curr_handle);
-    if (curr_node == NULL) {
-      CB_ERROR("Cannot find node with handle %d during %s draw.", curr_handle,
-               scene->name);
-      continue;
-    }
+    Sprite *sprite = renderable->sprite;
+    Transform *transform = renderable->transform;
+    Collider *collider = renderable->collider;
 
-    Component *sprite_component = array_list_find(
-        curr_node->components, sprite_component_kind_comparator);
-    if (sprite_component == NULL)
+    if (sprite == NULL || transform == NULL)
       continue;
-
-    Component *transform_component = array_list_find(
-        curr_node->components, transform_component_kind_comparator);
-    if (transform_component == NULL)
-      continue;
-
-    Assets *assets = runtime_get_assets();
-    Sprite *sprite = assets_get_sprite(assets, sprite_component->handle);
-    if (sprite == NULL) {
-      CB_ERROR("Cannot find sprite with handle %d of node %s during %s draw.",
-               sprite_component->handle, curr_node->name, scene->name);
-      continue;
-    }
-
-    Transform *transform =
-        assets_get_transform(assets, transform_component->handle);
-    if (transform == NULL) {
-      CB_ERROR(
-          "Cannot find transform with handle %d of node %s during %s draw.",
-          transform_component->handle, curr_node->name, scene->name);
-      continue;
-    }
 
     Texture *texture = assets_get_texture(assets, sprite->texture_handle);
     renderer_draw_texture(renderer, transform->position, transform->scale,
                           texture, sprite->color);
+
+    if (collider != NULL) {
+      Rect bounds = collider_world_bounds(collider, transform->position);
+
+      Texture texture = texture_white_1x1();
+      // renderer_draw_texture(renderer, bounds.position, bounds.size, &texture,
+      //                  COLOR_BLACK);
+    }
   }
 }
 
@@ -322,11 +337,13 @@ Node *scene_get_node(Scene *scene, NodeHandle handle) {
                                      : array_list_at(scene->nodes, handle);
 }
 
+Camera *scene_get_camera(Scene *scene) { return &scene->camera; }
+
 NodeHandle scene_find_node(Scene *scene, const char *name) {
   ArrayList *handles = scene->root->childrens;
   NodeHandle handle = CB_INVALID_HANDLE;
 
-  for (u32 i = 0; array_list_length(handles); i++) {
+  for (u32 i = 0; i < array_list_length(handles); i++) {
     NodeHandle curr_handle = *(NodeHandle *)array_list_at(handles, i);
     if (curr_handle == CB_INVALID_HANDLE)
       continue;

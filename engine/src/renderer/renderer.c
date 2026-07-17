@@ -81,13 +81,13 @@ void renderer_draw_texture(Renderer *renderer, Vec2 position, Vec2 size,
   top_right.color = color;
 
   RendererVertex bottom_left;
-  bottom_left.position = VEC2(position.x, position.y + size.y);
+  bottom_left.position = VEC2(position.x, position.y - size.y);
   bottom_left.texture_coords = VEC2(0.0f, 0.0f);
   bottom_left.texture_index = texture_index;
   bottom_left.color = color;
 
   RendererVertex bottom_right;
-  bottom_right.position = VEC2(position.x + size.x, position.y + size.y);
+  bottom_right.position = VEC2(position.x + size.x, position.y - size.y);
   bottom_right.texture_coords = VEC2(1.0f, 0.0f);
   bottom_right.texture_index = texture_index;
   bottom_right.color = color;

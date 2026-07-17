@@ -40,7 +40,7 @@ static i32 lua_node_index(lua_State *L) {
     lua_pushcfunction(L, lua_node_find_component);
     return 1;
   }
-
+  
   return 0;
 }
 

@@ -27,9 +27,10 @@ void runtime_run(void) {
   Camera *camera = scene_get_camera(_state.scene);
   camera_set_viewport(camera, VEC2(platform->width, platform->height));
 
-  scene_update(_state.scene);
-  scene_physics_update(_state.scene);
-  scene_draw(_state.scene, application_get_renderer(_state.app));
+  ArrayList *renderables = scene_make_renderables(_state.scene);
+  scene_update(_state.scene, renderables);
+  scene_physics_update(_state.scene, renderables);
+  scene_draw(_state.scene, application_get_renderer(_state.app), renderables);
 }
 
 Assets *runtime_get_assets(void) { return _state.assets; }

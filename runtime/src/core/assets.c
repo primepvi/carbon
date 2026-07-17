@@ -110,6 +110,10 @@ Transform *assets_get_transform(Assets *assets, ComponentHandle handle) {
   return array_list_at(assets->transforms, handle);
 }
 
+Collider *assets_get_collider(Assets *assets, ComponentHandle handle) {
+  return array_list_at(assets->colliders, handle);
+}
+
 ComponentHandle assets_get_component_handle(Assets *assets, ComponentKind kind,
                                             const char *name) {
   Component *component = hashmap_get(assets->components, name);
