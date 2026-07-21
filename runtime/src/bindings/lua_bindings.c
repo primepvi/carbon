@@ -2,7 +2,11 @@
 #include <cb_runtime/bindings/lua_transform.h>
 #include <cb_runtime/bindings/lua_input.h>
 #include <cb_runtime/bindings/lua_vec2.h>
+#include <cb_runtime/bindings/lua_color.h>
+#include <cb_runtime/bindings/lua_sprite.h>
 #include <cb_runtime/bindings/lua_node.h>
+#include <cb_runtime/bindings/lua_scene.h>
+#include <cb_runtime/bindings/lua_camera.h>
 
 void lua_bind_enum(lua_State *L, const char *name, const LuaEnumValue *values) {
   lua_newtable(L);
@@ -17,7 +21,11 @@ void lua_bind_enum(lua_State *L, const char *name, const LuaEnumValue *values) {
 
 void lua_bind(lua_State *L) {
   lua_vec2_bind(L);
+  lua_color_bind(L);
+  lua_sprite_bind(L);
   lua_transform_bind(L);
   lua_input_bind(L);
   lua_node_bind(L);
+  lua_scene_bind(L);
+  lua_camera_bind(L);
 }

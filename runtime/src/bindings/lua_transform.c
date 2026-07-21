@@ -5,16 +5,16 @@
 #include <string.h>
 
 static i32 lua_transform_index(lua_State *L) {
-  Transform **transform = luaL_checkudata(L, 1, "Transform");
+  Transform *transform = *(Transform **)luaL_checkudata(L, 1, "Transform");
   const char *key = luaL_checkstring(L, 2);
 
   if (strcmp(key, "position") == 0) {
-    lua_push_vec2(L, (*transform)->position);
+    lua_push_vec2_ptr(L, &transform->position);
     return 1;
   }
 
   if (strcmp(key, "scale") == 0) {
-    lua_push_vec2(L, (*transform)->scale);
+    lua_push_vec2_ptr(L, &transform->scale);
     return 1;
   }
 
@@ -24,13 +24,13 @@ static i32 lua_transform_index(lua_State *L) {
 static i32 lua_transform_new_index(lua_State *L) {
   Transform *transform = *(Transform **)luaL_checkudata(L, 1, "Transform");
   const char *key = luaL_checkstring(L, 2);
-  Vec2 *value = luaL_checkudata(L, 3, "Vec2");
+  Vec2 **value = luaL_checkudata(L, 3, "Vec2");
 
   if (strcmp(key, "position") == 0) {
     transform->previous_position = transform->position;
-    transform->position = *value;
+    transform->position = **value;
   } else if (strcmp(key, "scale") == 0) {
-    transform->scale = *value;
+    transform->scale = **value;
   }
 
   return 0;

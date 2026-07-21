@@ -14,25 +14,25 @@ static i32 lua_vec2_new(lua_State *L) {
 }
 
 static i32 lua_vec2_normalize(lua_State *L) {
-  Vec2 *vec = luaL_checkudata(L, 1, "Vec2");
-  lua_push_vec2(L, vec2_normalize(*vec));
+  LuaVec2 *data = luaL_checkudata(L, 1, "Vec2");
+  lua_push_vec2(L, vec2_normalize(*data->ptr));
 
   return 1;
 }
 
 static i32 lua_vec2_scale(lua_State *L) {
-  Vec2 *vec = luaL_checkudata(L, 1, "Vec2");
+  LuaVec2 *data = luaL_checkudata(L, 1, "Vec2");
   f32 scalar = luaL_checknumber(L, 2);
-  lua_push_vec2(L, vec2_scale(*vec, scalar));
+  lua_push_vec2(L, vec2_scale(*data->ptr, scalar));
 
   return 1;
 }
 
 static i32 lua_vec2_add(lua_State *L) {
-  Vec2 *a = luaL_checkudata(L, 1, "Vec2");
-  Vec2 *b = luaL_checkudata(L, 2, "Vec2");
+  LuaVec2 *a = luaL_checkudata(L, 1, "Vec2");
+  LuaVec2 *b = luaL_checkudata(L, 2, "Vec2");
 
-  lua_push_vec2(L, vec2_add(*a, *b));
+  lua_push_vec2(L, vec2_add(*a->ptr, *b->ptr));
   return 1;
 }
 
@@ -40,14 +40,14 @@ static i32 lua_vec2_index(lua_State *L) {
   const char *key = luaL_checkstring(L, 2);
 
   if (strcmp(key, "x") == 0) {
-    Vec2 *vec = luaL_checkudata(L, 1, "Vec2");
-    lua_pushnumber(L, vec->x);
+    LuaVec2 *vec = luaL_checkudata(L, 1, "Vec2");
+    lua_pushnumber(L, vec->ptr->x);
     return 1;
   }
 
   if (strcmp(key, "y") == 0) {
-    Vec2 *vec = luaL_checkudata(L, 1, "Vec2");
-    lua_pushnumber(L, vec->y);
+    LuaVec2 *vec = luaL_checkudata(L, 1, "Vec2");
+    lua_pushnumber(L, vec->ptr->y);
     return 1;
   }
 
@@ -69,21 +69,32 @@ static i32 lua_vec2_index(lua_State *L) {
 }
 
 static i32 lua_vec2_new_index(lua_State *L) {
-  Vec2 *vec = luaL_checkudata(L, 1, "Vec2");
+  LuaVec2 *vec = luaL_checkudata(L, 1, "Vec2");
   const char *key = luaL_checkstring(L, 2);
   f32 value = luaL_checknumber(L, 3);
 
   if (strcmp(key, "x") == 0)
-    vec->x = value;
+    vec->ptr->x = value;
   else if (strcmp(key, "y") == 0)
-    vec->y = value;
+    vec->ptr->y = value;
 
   return 0;
 }
 
 void lua_push_vec2(lua_State *L, Vec2 vec) {
-  Vec2 *vec_data = lua_newuserdatauv(L, sizeof(Vec2), 0);
-  *vec_data = vec;
+  LuaVec2 *data = lua_newuserdatauv(L, sizeof(LuaVec2), 0);
+
+  data->value = vec;
+  data->ptr = &data->value;
+
+  luaL_getmetatable(L, "Vec2");
+  lua_setmetatable(L, -2);
+}
+
+void lua_push_vec2_ptr(lua_State *L, Vec2 *vec) {
+  LuaVec2 *data = lua_newuserdatauv(L, sizeof(LuaVec2), 0);
+
+  data->ptr = vec;
 
   luaL_getmetatable(L, "Vec2");
   lua_setmetatable(L, -2);

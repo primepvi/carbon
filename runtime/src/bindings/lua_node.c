@@ -1,5 +1,6 @@
 #include <cb_runtime/bindings/lua_node.h>
 #include <cb_runtime/bindings/lua_transform.h>
+#include <cb_runtime/bindings/lua_sprite.h>
 #include <cb_runtime/core/runtime.h>
 
 #include <lauxlib.h>
@@ -15,6 +16,14 @@ static i32 lua_node_find_component(lua_State *L) {
     ComponentHandle handle = node_find_component(node, COMPONENT_TRANSFORM);
     Transform *transform = assets_get_transform(assets, handle);
     lua_push_transform(L, transform);
+
+    return 1;
+  }
+
+  if (strcmp(component_name, "Sprite") == 0) {
+    ComponentHandle handle = node_find_component(node, COMPONENT_SPRITE);
+    Sprite *sprite = assets_get_sprite(assets, handle);
+    lua_push_sprite(L, sprite);
 
     return 1;
   }
